@@ -30,6 +30,8 @@ Face-Tomb is a browser-based Three.js exploration prototype built as a sequence 
 - `face_tomb_walkthrough_v5_return_portal.html`
   - Newest variant based on v4 fixed, with an explicit return portal flow that spawns the player back in the main hall.
   - Contains large embedded `layout-data` JSON, interactables, minimap, mobile controls, special spaces, and impossible-room loop logic.
+- `face_tomb_walkthrough_v6_secret_spawn_recall.html`
+  - Latest variant: keeps the main-hall return portal, adds a separate secret-room recall object that teleports to the original spawn point, and shifts secret-room visuals to a stronger blue palette.
 
 ### Lightweight v4 variant files
 
@@ -78,13 +80,16 @@ This repository appears to capture iterative design stages rather than a single 
 7. **Return-portal refinement phase**
    - `face_tomb_walkthrough_v5_return_portal.html` adds an explicit return-portal destination back to the main hall (pillared hall center).
 
+8. **Secret-room recall + blue pass**
+   - `face_tomb_walkthrough_v6_secret_spawn_recall.html` adds a distinct recall orb in the secret room that returns to the main spawn point, while re-theming the secret room to blue.
+
 ## Quick start
 
 ### Option A: Open files directly
 
 Open any `*.html` file in a browser. For the most complete experience, start with:
 
-- `face_tomb_walkthrough_v5_return_portal.html`
+- `face_tomb_walkthrough_v6_secret_spawn_recall.html`
 
 ### Option B: Use the local PHP index
 
