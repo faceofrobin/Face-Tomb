@@ -36,6 +36,8 @@ Face-Tomb is a browser-based Three.js exploration prototype built as a sequence 
   - Latest variant: adds a second secret-room teleport orb that sends you to another chamber, includes a secret-room minimap overlay, adds a tiny bottom-right God Mode toggle (gold → blue when active), and applies remote wall/dome artwork textures.
 - `face_tomb_walkthrough_v8_simplified_hallway.html`
   - Latest variant: replaces the old impossible loop with a simpler multi-color ritual hallway (gentle up/down elevation), fixes blocked corner progression, and reveals the blue room after the final turn checkpoint.
+- `face_tomb_walkthrough_v9_closed_hall_external_portal_ready.html`
+  - Latest variant: closes hallway corner seams with corner posts, keeps the simplified colored hallway progression, and adds an external-space portal hook so an attached Three.js scene can be wired into a destination room.
 
 ### Lightweight v4 variant files
 
@@ -93,13 +95,16 @@ This repository appears to capture iterative design stages rather than a single 
 10. **Simplified hallway progression**
    - `face_tomb_walkthrough_v8_simplified_hallway.html` removes the brittle impossible-wall loop in favor of a colored hallway route that reliably unlocks the blue chamber at the last corner.
 
+11. **Closed-corner hallway + external portal hook**
+   - `face_tomb_walkthrough_v9_closed_hall_external_portal_ready.html` seals hallway corners and introduces a dedicated portal interaction for plugging in an attached Three.js scene room.
+
 ## Quick start
 
 ### Option A: Open files directly
 
 Open any `*.html` file in a browser. For the most complete experience, start with:
 
-- `face_tomb_walkthrough_v8_simplified_hallway.html`
+- `face_tomb_walkthrough_v9_closed_hall_external_portal_ready.html`
 
 ### Option B: Use the local PHP index
 
