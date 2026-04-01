@@ -1,0 +1,3 @@
+This JSON is intended as a simple drop-in layout source for a Three.js tomb scene.
+It uses a grid map, metadata for key rooms, and a player start position.
+Next step: turn this grid into generated floor tiles, wall meshes, and props.

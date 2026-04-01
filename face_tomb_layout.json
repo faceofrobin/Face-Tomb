@@ -1,0 +1,284 @@
+{
+  "name": "Face Tomb Layout",
+  "version": "1.0",
+  "inspiration": "A Doom-style simplification inspired by the general procession and chamber logic of KV7 (Ramesses II), adapted into an Egyptian Face myth environment.",
+  "units": "meters",
+  "grid": {
+    "cellSize": 4,
+    "rows": [
+      "#############################",
+      "#############################",
+      "#############################",
+      "#############.....###########",
+      "#############..E..###########",
+      "#############.....###########",
+      "###############.#############",
+      "###############.#############",
+      "###############.#############",
+      "##########.........##########",
+      "##########....A....##########",
+      "##########.........##########",
+      "###############.#############",
+      "###############.#############",
+      "#########.....#.#.....#######",
+      "#########..S..#.#..S..#######",
+      "#########.....#.#.....#######",
+      "############.......##########",
+      "############...P...##########",
+      "############.......##########",
+      "###############.#############",
+      "###############.#############",
+      "############.......##########",
+      "############...T...##########",
+      "############.......##########",
+      "###############.#############",
+      "###############.#############",
+      "#########.....#.#.....#######",
+      "#########..S..#.#..S..#######",
+      "#########.....#.#.....#######",
+      "############.......##########",
+      "############...B...##########",
+      "############.......##########",
+      "###############.#############",
+      "###############.#############",
+      "############.......##########",
+      "############...X...##########",
+      "############.......##########",
+      "#############################",
+      "#############################"
+    ],
+    "rowCount": 40,
+    "columnCount": 29,
+    "origin": {
+      "x": 0,
+      "z": 0
+    },
+    "north": "up"
+  },
+  "legend": {
+    "#": {
+      "type": "solid",
+      "label": "wall"
+    },
+    ".": {
+      "type": "floor",
+      "label": "walkable"
+    },
+    "E": {
+      "type": "poi",
+      "label": "entrance"
+    },
+    "A": {
+      "type": "poi",
+      "label": "antechamber"
+    },
+    "S": {
+      "type": "poi",
+      "label": "side_chamber"
+    },
+    "P": {
+      "type": "poi",
+      "label": "pillared_hall"
+    },
+    "T": {
+      "type": "poi",
+      "label": "turn_chamber"
+    },
+    "B": {
+      "type": "poi",
+      "label": "burial_chamber"
+    },
+    "X": {
+      "type": "poi",
+      "label": "secret_relic_room"
+    }
+  },
+  "playerStart": {
+    "row": 4,
+    "col": 15,
+    "facingDegrees": 180,
+    "description": "Spawn inside the entrance chamber, facing down the main ritual axis."
+  },
+  "renderDefaults": {
+    "wallHeight": 5,
+    "floorY": 0,
+    "ceilingY": 5,
+    "wallThickness": 0.25,
+    "doorHeight": 3.2,
+    "torchSpacingCells": 3,
+    "ambientLight": 0.32,
+    "fogDensity": 0.012
+  },
+  "materials": {
+    "wall": "egyptian_sandstone_face_relief",
+    "floor": "worn_stone_tiles",
+    "ceiling": "painted_stone_dark",
+    "accent": "gold_blue_red_mineral_pigment"
+  },
+  "rooms": [
+    {
+      "id": "entrance",
+      "marker": "E",
+      "name": "Entrance Chamber",
+      "bounds": {
+        "rowMin": 3,
+        "rowMax": 5,
+        "colMin": 13,
+        "colMax": 17
+      },
+      "notes": "Initial reveal of the Face as an ancient emblem."
+    },
+    {
+      "id": "antechamber",
+      "marker": "A",
+      "name": "Antechamber",
+      "bounds": {
+        "rowMin": 9,
+        "rowMax": 11,
+        "colMin": 10,
+        "colMax": 18
+      },
+      "notes": "Broad first chamber for inscriptions and mural panels."
+    },
+    {
+      "id": "side_chamber_nw",
+      "marker": "S",
+      "name": "Northwest Side Chamber",
+      "bounds": {
+        "rowMin": 14,
+        "rowMax": 16,
+        "colMin": 9,
+        "colMax": 13
+      },
+      "notes": "Optional lore room."
+    },
+    {
+      "id": "side_chamber_ne",
+      "marker": "S",
+      "name": "Northeast Side Chamber",
+      "bounds": {
+        "rowMin": 14,
+        "rowMax": 16,
+        "colMin": 17,
+        "colMax": 21
+      },
+      "notes": "Optional lore room."
+    },
+    {
+      "id": "pillared_hall",
+      "marker": "P",
+      "name": "Pillared Hall",
+      "bounds": {
+        "rowMin": 17,
+        "rowMax": 19,
+        "colMin": 12,
+        "colMax": 18
+      },
+      "notes": "Good place for columns, statues, and Face-procession murals.",
+      "pillars": [
+        {
+          "row": 17,
+          "col": 13
+        },
+        {
+          "row": 17,
+          "col": 17
+        },
+        {
+          "row": 19,
+          "col": 13
+        },
+        {
+          "row": 19,
+          "col": 17
+        }
+      ]
+    },
+    {
+      "id": "turn_chamber",
+      "marker": "T",
+      "name": "Turning Chamber",
+      "bounds": {
+        "rowMin": 22,
+        "rowMax": 24,
+        "colMin": 12,
+        "colMax": 18
+      },
+      "notes": "A dramatic hinge in the procession."
+    },
+    {
+      "id": "side_chamber_sw",
+      "marker": "S",
+      "name": "Southwest Burial Annex",
+      "bounds": {
+        "rowMin": 27,
+        "rowMax": 29,
+        "colMin": 9,
+        "colMax": 13
+      },
+      "notes": "Storage, canopic parody, or relic room."
+    },
+    {
+      "id": "side_chamber_se",
+      "marker": "S",
+      "name": "Southeast Burial Annex",
+      "bounds": {
+        "rowMin": 27,
+        "rowMax": 29,
+        "colMin": 17,
+        "colMax": 21
+      },
+      "notes": "Second annex with mirrored symbolism."
+    },
+    {
+      "id": "burial_chamber",
+      "marker": "B",
+      "name": "Burial Chamber",
+      "bounds": {
+        "rowMin": 30,
+        "rowMax": 32,
+        "colMin": 12,
+        "colMax": 18
+      },
+      "notes": "Main ritual destination; center the sacred Face object here."
+    },
+    {
+      "id": "secret_room",
+      "marker": "X",
+      "name": "Secret Relic Room",
+      "bounds": {
+        "rowMin": 35,
+        "rowMax": 37,
+        "colMin": 12,
+        "colMax": 18
+      },
+      "notes": "Optional final chamber for the oldest version of the Face."
+    }
+  ],
+  "suggestedInteractiveSpots": [
+    {
+      "row": 10,
+      "col": 14,
+      "type": "wall_mural",
+      "text": "Origin hymn of the Face"
+    },
+    {
+      "row": 18,
+      "col": 15,
+      "type": "idol",
+      "text": "Pillared hall statue"
+    },
+    {
+      "row": 31,
+      "col": 15,
+      "type": "sarcophagus",
+      "text": "Sacred Face reliquary"
+    },
+    {
+      "row": 36,
+      "col": 15,
+      "type": "mirror",
+      "text": "Player reflection becomes the Face"
+    }
+  ]
+}

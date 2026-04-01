@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Face Tomb Walkthrough - Professional V4</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #060606; font-family: Arial, sans-serif; }
+    #app { position: fixed; inset: 0; }
+    #hud { position: fixed; top: 14px; left: 14px; z-index: 20; color: #fff; background: rgba(0,0,0,0.72); padding: 12px 14px; border: 1px solid rgba(255,255,255,0.22); max-width: 360px; backdrop-filter: blur(3px); }
+    #crosshair { position: fixed; top: 50%; left: 50%; width: 18px; height: 18px; margin-left: -9px; margin-top: -9px; z-index: 10; pointer-events: none; opacity: 0.7; }
+    #crosshair::before, #crosshair::after { content: ""; position: absolute; background: #fff; }
+    #crosshair::before { width: 18px; height: 2px; top: 8px; }
+    #crosshair::after  { width: 2px; height: 18px; left: 8px; }
+    #overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,0.85); color: #fff; z-index: 30; cursor: pointer; text-align: center; }
+    #infoBox { position: fixed; right: 14px; bottom: 14px; z-index: 20; color: #fff; background: rgba(0,0,0,0.78); padding: 10px 12px; border: 1px solid rgba(255,255,255,0.2); width: 300px; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="crosshair"></div>
+  <div id="hud">
+    <h1>FACE TOMB v4</h1>
+    <div>WASD move · Mouse look · E interact</div>
+  </div>
+  <div id="infoBox">The secret room awaits four left turns.</div>
+  <div id="overlay"><div><h2>CLICK TO ENTER THE TOMB</h2><p>W/S controls are now fixed. Walk speed is increased.</p></div></div>
+
+  <script type="application/json" id="layout-data">
+    {
+      "grid": {
+        "cellSize": 4,
+        "rows": [
+          "#############################",
+          "#############..E..###########",
+          "###############.#############",
+          "##########....A....##########",
+          "###############.#############",
+          "############...T...##########",
+          "###############.#############",
+          "############...B...##########",
+          "###############.#############",
+          "############...X...##########",
+          "#############################"
+        ]
+      },
+      "playerStart": { "row": 1, "col": 15 },
+      "renderDefaults": { "fogDensity": 0.012 }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
+
+    const layout = JSON.parse(document.getElementById('layout-data').textContent);
+    const state = {
+      forward: false, back: false, left: false, right: false,
+      moveSpeed: 12.0, // Increased speed
+      yaw: 0, pitch: 0,
+      interactables: []
+    };
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x060606);
+    scene.fog = new THREE.FogExp2(0x060606, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.rotation.order = 'YXZ';
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('app').appendChild(renderer.domElement);
+
+    // --- Lighting (RESTORED TO FIX BLACK SCREEN) ---
+    const ambient = new THREE.AmbientLight(0xffffff, 0.2);
+    scene.add(ambient);
+
+    // --- Materials ---
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x554433 });
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+    // Striking Secret Material
+    const secretMat = new THREE.MeshStandardMaterial({ 
+      color: 0x000000, emissive: 0xff00ff, emissiveIntensity: 5 
+    });
+
+    // --- Build World ---
+    const cellSize = 4;
+    layout.grid.rows.forEach((row, r) => {
+      row.split('').forEach((ch, c) => {
+        const x = c * cellSize;
+        const z = r * cellSize;
+        if (ch === '#') {
+          const wall = new THREE.Mesh(new THREE.BoxGeometry(cellSize, 6, cellSize), wallMat);
+          wall.position.set(x, 3, z);
+          scene.add(wall);
+        } else {
+          const floor = new THREE.Mesh(new THREE.BoxGeometry(cellSize, 0.1, cellSize), floorMat);
+          floor.position.set(x, 0, z);
+          scene.add(floor);
+
+          if (ch === 'T') { // Restoration of Dome
+            const dome = new THREE.Mesh(new THREE.SphereGeometry(6, 32, 16, 0, Math.PI*2, 0, Math.PI/2), wallMat);
+            dome.position.set(x, 6, z);
+            scene.add(dome);
+          }
+
+          if (ch === 'X') { // Secret Object
+            const relic = new THREE.Mesh(new THREE.OctahedronGeometry(1), secretMat);
+            relic.position.set(x, 1.5, z);
+            relic.userData.interact = () => {
+                camera.position.set(layout.playerStart.col * cellSize, 1.7, layout.playerStart.row * cellSize);
+                document.getElementById('infoBox').innerText = "Teleported to Hall E";
+            };
+            state.interactables.push(relic);
+            scene.add(relic);
+          }
+        }
+      });
+    });
+
+    // --- Controls (FIXED W/S REVERSAL) ---
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'KeyW') state.forward = true;
+      if (e.code === 'KeyS') state.back = true;
+      if (e.code === 'KeyA') state.left = true;
+      if (e.code === 'KeyD') state.right = true;
+      if (e.code === 'KeyE') {
+        const ray = new THREE.Raycaster();
+        ray.setFromCamera(new THREE.Vector2(0,0), camera);
+        const hits = ray.intersectObjects(state.interactables);
+        if (hits.length > 0) hits[0].object.userData.interact();
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'KeyW') state.forward = false;
+      if (e.code === 'KeyS') state.back = false;
+      if (e.code === 'KeyA') state.left = false;
+      if (e.code === 'KeyD') state.right = false;
+    });
+
+    document.getElementById('overlay').onclick = () => {
+      document.getElementById('overlay').style.display = 'none';
+      document.body.requestPointerLock();
+    };
+
+    const clock = new THREE.Clock();
+    function tick() {
+      const delta = clock.getDelta();
+      const dir = new THREE.Vector3();
+      camera.getWorldDirection(dir);
+      dir.y = 0; dir.normalize();
+      const side = new THREE.Vector3(-dir.z, 0, dir.x);
+
+      if (state.forward) camera.position.addScaledVector(dir, state.moveSpeed * delta);
+      if (state.back)    camera.position.addScaledVector(dir, -state.moveSpeed * delta);
+      if (state.left)    camera.position.addScaledVector(side, -state.moveSpeed * delta);
+      if (state.right)   camera.position.addScaledVector(side, state.moveSpeed * delta);
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+    
+    camera.position.set(layout.playerStart.col * cellSize, 1.7, layout.playerStart.row * cellSize);
+    tick();
+  </script>
+</body>
+</html>

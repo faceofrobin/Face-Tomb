@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Face Tomb Starter - Three.js</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    #app {
+      position: fixed;
+      inset: 0;
+    }
+    #hud {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 20;
+      color: #fff;
+      background: rgba(0,0,0,0.72);
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,0.22);
+      max-width: 360px;
+      line-height: 1.35;
+      font-size: 14px;
+      user-select: none;
+      backdrop-filter: blur(3px);
+    }
+    #hud h1 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    #hud .small {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-top: 6px;
+    }
+    #crosshair {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 18px;
+      height: 18px;
+      margin-left: -9px;
+      margin-top: -9px;
+      z-index: 10;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    #crosshair::before,
+    #crosshair::after {
+      content: "";
+      position: absolute;
+      background: #fff;
+    }
+    #crosshair::before {
+      width: 18px;
+      height: 2px;
+      left: 0;
+      top: 8px;
+    }
+    #crosshair::after {
+      width: 2px;
+      height: 18px;
+      left: 8px;
+      top: 0;
+    }
+    #overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at center, rgba(40,40,40,0.18), rgba(0,0,0,0.92));
+      color: #fff;
+      z-index: 30;
+      text-align: center;
+      padding: 20px;
+      cursor: pointer;
+    }
+    #overlay .panel {
+      max-width: 700px;
+      padding: 24px 28px;
+      background: rgba(0,0,0,0.72);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    #overlay h2 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      letter-spacing: 0.06em;
+    }
+    #overlay p {
+      margin: 10px 0;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+    #infoBox {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 20;
+      color: #fff;
+      background: rgba(0,0,0,0.78);
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      width: min(340px, calc(100vw - 28px));
+      min-height: 42px;
+      font-size: 13px;
+      line-height: 1.35;
+      backdrop-filter: blur(3px);
+    }
+    #minimap {
+      position: fixed;
+      right: 14px;
+      top: 14px;
+      z-index: 20;
+      width: 170px;
+      height: 230px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,255,255,0.2);
+      image-rendering: pixelated;
+    }
+    @media (max-width: 700px) {
+      #hud {
+        max-width: calc(100vw - 28px);
+        font-size: 13px;
+      }
+      #minimap {
+        width: 120px;
+        height: 165px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <canvas id="minimap" width="170" height="230"></canvas>
+  <div id="crosshair"></div>
+  <div id="hud">
+    <h1>FACE TOMB STARTER</h1>
+    <div>WASD move · Mouse look · Shift sprint · E inspect</div>
+    <div>Click the screen to enter pointer-lock mode.</div>
+    <div class="small">Built to be expanded with future rooms, galleries, portals, and stranger geometry.</div>
+  </div>
+  <div id="infoBox">Approach a chamber marker or glowing object, then press E.</div>
+  <div id="overlay">
+    <div class="panel">
+      <h2>ENTER THE FACE TOMB</h2>
+      <p>A Doom-like starter walk-through, rough-cut from checkerboard stone.</p>
+      <p>Click to begin. Press <strong>Esc</strong> to free the mouse.</p>
+    </div>
+  </div>
+
+  <script type="application/json" id="layout-data">{
+  "name": "Face Tomb Layout",
+  "version": "1.0",
+  "inspiration": "A Doom-style simplification inspired by the general procession and chamber logic of KV7 (Ramesses II), adapted into an Egyptian Face myth environment.",
+  "units": "meters",
+  "grid": {
+    "cellSize": 4,
+    "rows": [
+      "#############################",
+      "#############################",
+      "#############################",
+      "#############.....###########",
+      "#############..E..###########",
+      "#############.....###########",
+      "###############.#############",
+      "###############.#############",
+      "###############.#############",
+      "##########.........##########",
+      "##########....A....##########",
+      "##########.........##########",
+      "###############.#############",
+      "###############.#############",
+      "#########.....#.#.....#######",
+      "#########..S..#.#..S..#######",
+      "#########.....#.#.....#######",
+      "############.......##########",
+      "############...P...##########",
+      "############.......##########",
+      "###############.#############",
+      "###############.#############",
+      "############.......##########",
+      "############...T...##########",
+      "############.......##########",
+      "###############.#############",
+      "###############.#############",
+      "#########.....#.#.....#######",
+      "#########..S..#.#..S..#######",
+      "#########.....#.#.....#######",
+      "############.......##########",
+      "############...B...##########",
+      "############.......##########",
+      "###############.#############",
+      "###############.#############",
+      "############.......##########",
+      "############...X...##########",
+      "############.......##########",
+      "#############################",
+      "#############################"
+    ],
+    "rowCount": 40,
+    "columnCount": 29,
+    "origin": {
+      "x": 0,
+      "z": 0
+    },
+    "north": "up"
+  },
+  "legend": {
+    "#": {
+      "type": "solid",
+      "label": "wall"
+    },
+    ".": {
+      "type": "floor",
+      "label": "walkable"
+    },
+    "E": {
+      "type": "poi",
+      "label": "entrance"
+    },
+    "A": {
+      "type": "poi",
+      "label": "antechamber"
+    },
+    "S": {
+      "type": "poi",
+      "label": "side_chamber"
+    },
+    "P": {
+      "type": "poi",
+      "label": "pillared_hall"
+    },
+    "T": {
+      "type": "poi",
+      "label": "turn_chamber"
+    },
+    "B": {
+      "type": "poi",
+      "label": "burial_chamber"
+    },
+    "X": {
+      "type": "poi",
+      "label": "secret_relic_room"
+    }
+  },
+  "playerStart": {
+    "row": 4,
+    "col": 15,
+    "facingDegrees": 180,
+    "description": "Spawn inside the entrance chamber, facing down the main ritual axis."
+  },
+  "renderDefaults": {
+    "wallHeight": 5,
+    "floorY": 0,
+    "ceilingY": 5,
+    "wallThickness": 0.25,
+    "doorHeight": 3.2,
+    "torchSpacingCells": 3,
+    "ambientLight": 0.32,
+    "fogDensity": 0.012
+  },
+  "materials": {
+    "wall": "egyptian_sandstone_face_relief",
+    "floor": "worn_stone_tiles",
+    "ceiling": "painted_stone_dark",
+    "accent": "gold_blue_red_mineral_pigment"
+  },
+  "rooms": [
+    {
+      "id": "entrance",
+      "marker": "E",
+      "name": "Entrance Chamber",
+      "bounds": {
+        "rowMin": 3,
+        "rowMax": 5,
+        "colMin": 13,
+        "colMax": 17
+      },
+      "notes": "Initial reveal of the Face as an ancient emblem."
+    },
+    {
+      "id": "antechamber",
+      "marker": "A",
+      "name": "Antechamber",
+      "bounds": {
+        "rowMin": 9,
+        "rowMax": 11,
+        "colMin": 10,
+        "colMax": 18
+      },
+      "notes": "Broad first chamber for inscriptions and mural panels."
+    },
+    {
+      "id": "side_chamber_nw",
+      "marker": "S",
+      "name": "Northwest Side Chamber",
+      "bounds": {
+        "rowMin": 14,
+        "rowMax": 16,
+        "colMin": 9,
+        "colMax": 13
+      },
+      "notes": "Optional lore room."
+    },
+    {
+      "id": "side_chamber_ne",
+      "marker": "S",
+      "name": "Northeast Side Chamber",
+      "bounds": {
+        "rowMin": 14,
+        "rowMax": 16,
+        "colMin": 17,
+        "colMax": 21
+      },
+      "notes": "Optional lore room."
+    },
+    {
+      "id": "pillared_hall",
+      "marker": "P",
+      "name": "Pillared Hall",
+      "bounds": {
+        "rowMin": 17,
+        "rowMax": 19,
+        "colMin": 12,
+        "colMax": 18
+      },
+      "notes": "Good place for columns, statues, and Face-procession murals.",
+      "pillars": [
+        {
+          "row": 17,
+          "col": 13
+        },
+        {
+          "row": 17,
+          "col": 17
+        },
+        {
+          "row": 19,
+          "col": 13
+        },
+        {
+          "row": 19,
+          "col": 17
+        }
+      ]
+    },
+    {
+      "id": "turn_chamber",
+      "marker": "T",
+      "name": "Turning Chamber",
+      "bounds": {
+        "rowMin": 22,
+        "rowMax": 24,
+        "colMin": 12,
+        "colMax": 18
+      },
+      "notes": "A dramatic hinge in the procession."
+    },
+    {
+      "id": "side_chamber_sw",
+      "marker": "S",
+      "name": "Southwest Burial Annex",
+      "bounds": {
+        "rowMin": 27,
+        "rowMax": 29,
+        "colMin": 9,
+        "colMax": 13
+      },
+      "notes": "Storage, canopic parody, or relic room."
+    },
+    {
+      "id": "side_chamber_se",
+      "marker": "S",
+      "name": "Southeast Burial Annex",
+      "bounds": {
+        "rowMin": 27,
+        "rowMax": 29,
+        "colMin": 17,
+        "colMax": 21
+      },
+      "notes": "Second annex with mirrored symbolism."
+    },
+    {
+      "id": "burial_chamber",
+      "marker": "B",
+      "name": "Burial Chamber",
+      "bounds": {
+        "rowMin": 30,
+        "rowMax": 32,
+        "colMin": 12,
+        "colMax": 18
+      },
+      "notes": "Main ritual destination; center the sacred Face object here."
+    },
+    {
+      "id": "secret_room",
+      "marker": "X",
+      "name": "Secret Relic Room",
+      "bounds": {
+        "rowMin": 35,
+        "rowMax": 37,
+        "colMin": 12,
+        "colMax": 18
+      },
+      "notes": "Optional final chamber for the oldest version of the Face."
+    }
+  ],
+  "suggestedInteractiveSpots": [
+    {
+      "row": 10,
+      "col": 14,
+      "type": "wall_mural",
+      "text": "Origin hymn of the Face"
+    },
+    {
+      "row": 18,
+      "col": 15,
+      "type": "idol",
+      "text": "Pillared hall statue"
+    },
+    {
+      "row": 31,
+      "col": 15,
+      "type": "sarcophagus",
+      "text": "Sacred Face reliquary"
+    },
+    {
+      "row": 36,
+      "col": 15,
+      "type": "mirror",
+      "text": "Player reflection becomes the Face"
+    }
+  ]
+}</script>
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
+
+    const app = document.getElementById('app');
+    const overlay = document.getElementById('overlay');
+    const infoBox = document.getElementById('infoBox');
+    const minimap = document.getElementById('minimap');
+    const mapCtx = minimap.getContext('2d');
+    const layout = JSON.parse(document.getElementById('layout-data').textContent);
+
+    const state = {
+      forward: false,
+      back: false,
+      left: false,
+      right: false,
+      sprint: false,
+      canLook: false,
+      yaw: 0,
+      pitch: 0,
+      velocity: new THREE.Vector3(),
+      moveSpeed: 6.0,
+      sprintMultiplier: 1.75,
+      interactables: [],
+      currentInteractable: null,
+      portals: []
+    };
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x060606);
+    scene.fog = new THREE.FogExp2(0x080808, layout.renderDefaults.fogDensity || 0.012);
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    app.appendChild(renderer.domElement);
+
+    const cellSize = layout.grid.cellSize || 4;
+    const wallHeight = layout.renderDefaults.wallHeight || 5;
+    const halfCell = cellSize / 2;
+    const wallThickness = layout.renderDefaults.wallThickness || 0.25;
+
+    function makeCheckerTexture(size = 256, squares = 8, colors = ['#7b745f', '#5a5344']) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      const square = size / squares;
+      for (let y = 0; y < squares; y++) {
+        for (let x = 0; x < squares; x++) {
+          ctx.fillStyle = (x + y) % 2 === 0 ? colors[0] : colors[1];
+          ctx.fillRect(x * square, y * square, square, square);
+        }
+      }
+
+      for (let i = 0; i < 220; i++) {
+        ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.07})`;
+        ctx.beginPath();
+        ctx.arc(Math.random() * size, Math.random() * size, Math.random() * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.anisotropy = 8;
+      return texture;
+    }
+
+    const floorTexture = makeCheckerTexture(512, 10, ['#665f4f', '#4e473b']);
+    floorTexture.repeat.set(1.2, 1.2);
+
+    const wallTexture = makeCheckerTexture(512, 8, ['#8a8068', '#665f4f']);
+    wallTexture.repeat.set(1, 1);
+
+    const ceilingTexture = makeCheckerTexture(512, 12, ['#373737', '#202020']);
+    ceilingTexture.repeat.set(1.3, 1.3);
+
+    const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: 0.95, metalness: 0.02 });
+    const wallMat = new THREE.MeshStandardMaterial({ map: wallTexture, roughness: 0.9, metalness: 0.03 });
+    const ceilingMat = new THREE.MeshStandardMaterial({ map: ceilingTexture, roughness: 1.0, metalness: 0.0 });
+    const markerMat = new THREE.MeshStandardMaterial({ color: 0xc8b370, emissive: 0x3a2a08, roughness: 0.65 });
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x8a8068, roughness: 0.85 });
+    const glowMat = new THREE.MeshStandardMaterial({
+      color: 0xe8d9a0,
+      emissive: 0xc29f34,
+      emissiveIntensity: 1.4,
+      roughness: 0.5
+    });
+
+    const worldGroup = new THREE.Group();
+    scene.add(worldGroup);
+
+    const collisionRects = [];
+    const floorCells = [];
+    const poiCells = [];
+    const roomCenters = new Map();
+
+    function gridToWorld(row, col) {
+      const x = col * cellSize + halfCell;
+      const z = row * cellSize + halfCell;
+      return new THREE.Vector3(x, 0, z);
+    }
+
+    function addRectCollision(x, z, width, depth) {
+      collisionRects.push({
+        minX: x - width / 2,
+        maxX: x + width / 2,
+        minZ: z - depth / 2,
+        maxZ: z + depth / 2
+      });
+    }
+
+    function buildWorldFromGrid() {
+      const rows = layout.grid.rows;
+      const rowCount = rows.length;
+      const colCount = rows[0].length;
+
+      for (let row = 0; row < rowCount; row++) {
+        for (let col = 0; col < colCount; col++) {
+          const ch = rows[row][col];
+          const pos = gridToWorld(row, col);
+
+          if (ch !== '#') {
+            floorCells.push({ row, col, x: pos.x, z: pos.z, char: ch });
+
+            const floor = new THREE.Mesh(
+              new THREE.BoxGeometry(cellSize, 0.12, cellSize),
+              floorMat
+            );
+            floor.position.set(pos.x, -0.06, pos.z);
+            worldGroup.add(floor);
+
+            const ceiling = new THREE.Mesh(
+              new THREE.BoxGeometry(cellSize, 0.12, cellSize),
+              ceilingMat
+            );
+            ceiling.position.set(pos.x, wallHeight + 0.06, pos.z);
+            worldGroup.add(ceiling);
+
+            if (ch !== '.') {
+              poiCells.push({ row, col, x: pos.x, z: pos.z, char: ch });
+            }
+          } else {
+            const wall = new THREE.Mesh(
+              new THREE.BoxGeometry(cellSize, wallHeight, cellSize),
+              wallMat
+            );
+            wall.position.set(pos.x, wallHeight / 2, pos.z);
+            worldGroup.add(wall);
+            addRectCollision(pos.x, pos.z, cellSize, cellSize);
+          }
+        }
+      }
+
+      // Add simple boundary torch-lights along some corridor cells
+      floorCells.forEach((cell, index) => {
+        if (index % 9 !== 0) return;
+        const light = new THREE.PointLight(0xffddaa, 1.2, cellSize * 3.5, 2);
+        light.position.set(cell.x, 2.7, cell.z);
+        scene.add(light);
+      });
+    }
+
+    function buildRoomMarkers() {
+      for (const room of layout.rooms) {
+        const centerRow = (room.bounds.rowMin + room.bounds.rowMax) / 2;
+        const centerCol = (room.bounds.colMin + room.bounds.colMax) / 2;
+        const center = gridToWorld(centerRow, centerCol);
+        roomCenters.set(room.id, center.clone());
+
+        const marker = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.55, 0.7, 1.8, 8),
+          markerMat
+        );
+        marker.position.set(center.x, 0.9, center.z);
+        marker.userData = {
+          type: 'room',
+          roomId: room.id,
+          title: room.name,
+          text: room.notes || 'Room marker'
+        };
+        worldGroup.add(marker);
+        state.interactables.push(marker);
+
+        const glow = new THREE.Mesh(
+          new THREE.SphereGeometry(0.26, 12, 12),
+          glowMat
+        );
+        glow.position.set(center.x, 2.2, center.z);
+        worldGroup.add(glow);
+      }
+    }
+
+    function buildPillars() {
+      const pillaredHall = layout.rooms.find(r => r.id === 'pillared_hall');
+      if (!pillaredHall || !pillaredHall.pillars) return;
+
+      pillaredHall.pillars.forEach(p => {
+        const pos = gridToWorld(p.row, p.col);
+        const pillar = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.5, 0.6, wallHeight - 0.2, 12),
+          pillarMat
+        );
+        pillar.position.set(pos.x, (wallHeight - 0.2) / 2, pos.z);
+        worldGroup.add(pillar);
+        addRectCollision(pos.x, pos.z, 1.15, 1.15);
+      });
+    }
+
+    function buildInteractives() {
+      layout.suggestedInteractiveSpots.forEach((spot, idx) => {
+        const pos = gridToWorld(spot.row, spot.col);
+        const mesh = new THREE.Mesh(
+          new THREE.OctahedronGeometry(0.45 + (idx % 2) * 0.08),
+          glowMat.clone()
+        );
+        mesh.position.set(pos.x, 1.15, pos.z);
+        mesh.rotation.y = idx * 0.7;
+        mesh.userData = {
+          type: spot.type,
+          title: spot.type.replaceAll('_', ' ').toUpperCase(),
+          text: spot.text
+        };
+        worldGroup.add(mesh);
+        state.interactables.push(mesh);
+
+        const light = new THREE.PointLight(0xffd56e, 1.7, 9, 2);
+        light.position.set(pos.x, 2.1, pos.z);
+        scene.add(light);
+      });
+    }
+
+    function buildPortalStubs() {
+      // Future-facing hooks for expansions and non-Euclidean versions.
+      // For now these are just metadata-friendly visual archways.
+      const burial = roomCenters.get('burial_chamber');
+      if (!burial) return;
+
+      const offsets = [
+        new THREE.Vector3(-cellSize * 2.5, 0, 0),
+        new THREE.Vector3(cellSize * 2.5, 0, 0),
+      ];
+
+      offsets.forEach((offset, i) => {
+        const pos = burial.clone().add(offset);
+
+        const arch = new THREE.Group();
+
+        const left = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3.6, 0.5), wallMat);
+        left.position.set(-0.85, 1.8, 0);
+        arch.add(left);
+
+        const right = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3.6, 0.5), wallMat);
+        right.position.set(0.85, 1.8, 0);
+        arch.add(right);
+
+        const top = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 0.5), wallMat);
+        top.position.set(0, 3.4, 0);
+        arch.add(top);
+
+        const shimmer = new THREE.Mesh(
+          new THREE.PlaneGeometry(1.5, 2.5),
+          new THREE.MeshBasicMaterial({
+            color: i === 0 ? 0x4466cc : 0x8844cc,
+            transparent: true,
+            opacity: 0.28,
+            side: THREE.DoubleSide
+          })
+        );
+        shimmer.position.set(0, 1.55, -0.03);
+        arch.add(shimmer);
+
+        arch.position.copy(pos);
+        arch.rotation.y = i === 0 ? Math.PI / 2 : -Math.PI / 2;
+        arch.userData = {
+          type: 'portal_stub',
+          title: i === 0 ? 'FUTURE GALLERY PORTAL' : 'FUTURE IMPOSSIBLE ROOM',
+          text: i === 0
+            ? 'Reserved for another gallery wing or expansion map.'
+            : 'Reserved for later non-Euclidean or overlapping-space experiments.'
+        };
+        worldGroup.add(arch);
+        state.interactables.push(arch);
+
+        state.portals.push({
+          id: i === 0 ? 'gallery_portal' : 'impossible_portal',
+          position: pos.clone(),
+          target: null,
+          mode: 'stub'
+        });
+      });
+    }
+
+    function addLighting() {
+      const ambient = new THREE.AmbientLight(0xffffff, layout.renderDefaults.ambientLight || 0.32);
+      scene.add(ambient);
+
+      const dir = new THREE.DirectionalLight(0xcfc7b4, 0.45);
+      dir.position.set(12, 20, 8);
+      scene.add(dir);
+    }
+
+    function setupPlayer() {
+      const start = layout.playerStart;
+      const pos = gridToWorld(start.row, start.col);
+      camera.position.set(pos.x, 1.7, pos.z);
+      state.yaw = THREE.MathUtils.degToRad(start.facingDegrees || 0);
+      updateCameraRotation();
+    }
+
+    function updateCameraRotation() {
+      camera.rotation.order = 'YXZ';
+      camera.rotation.y = state.yaw;
+      camera.rotation.x = state.pitch;
+    }
+
+    function resolveCollisions(nextPos) {
+      const radius = 0.42;
+
+      for (const rect of collisionRects) {
+        const nearestX = Math.max(rect.minX, Math.min(nextPos.x, rect.maxX));
+        const nearestZ = Math.max(rect.minZ, Math.min(nextPos.z, rect.maxZ));
+        const dx = nextPos.x - nearestX;
+        const dz = nextPos.z - nearestZ;
+        const distSq = dx * dx + dz * dz;
+
+        if (distSq < radius * radius) {
+          const dist = Math.sqrt(distSq) || 0.0001;
+          const push = radius - dist;
+          nextPos.x += (dx / dist) * push;
+          nextPos.z += (dz / dist) * push;
+        }
+      }
+    }
+
+    function updateMovement(delta) {
+      const forward = new THREE.Vector3(Math.sin(state.yaw), 0, Math.cos(state.yaw));
+      const right = new THREE.Vector3(forward.z, 0, -forward.x);
+      const move = new THREE.Vector3();
+
+      if (state.forward) move.add(forward);
+      if (state.back) move.sub(forward);
+      if (state.right) move.add(right);
+      if (state.left) move.sub(right);
+
+      if (move.lengthSq() > 0) {
+        move.normalize();
+        const speed = state.moveSpeed * (state.sprint ? state.sprintMultiplier : 1);
+        state.velocity.x = move.x * speed;
+        state.velocity.z = move.z * speed;
+      } else {
+        state.velocity.x = 0;
+        state.velocity.z = 0;
+      }
+
+      const nextPos = camera.position.clone();
+      nextPos.x += state.velocity.x * delta;
+      nextPos.z += state.velocity.z * delta;
+      resolveCollisions(nextPos);
+      camera.position.copy(nextPos);
+    }
+
+    function findNearestInteractable() {
+      let best = null;
+      let bestDist = Infinity;
+
+      state.interactables.forEach(obj => {
+        const targetPos = new THREE.Vector3();
+        obj.getWorldPosition(targetPos);
+        const dist = camera.position.distanceTo(targetPos);
+        if (dist < 4.25 && dist < bestDist) {
+          best = obj;
+          bestDist = dist;
+        }
+      });
+
+      state.currentInteractable = best;
+      if (best) {
+        const d = best.userData;
+        infoBox.innerHTML = `<strong>${d.title || 'Object'}</strong><br>${d.text || 'Press E'}<br><span style="opacity:.75">Press E to inspect.</span>`;
+      } else {
+        infoBox.textContent = 'Approach a chamber marker or glowing object, then press E.';
+      }
+    }
+
+    function inspectCurrent() {
+      if (!state.currentInteractable) return;
+      const d = state.currentInteractable.userData || {};
+      alert(`${d.title || 'Object'}\n\n${d.text || ''}`);
+    }
+
+    function drawMinimap() {
+      const rows = layout.grid.rows;
+      const h = minimap.height;
+      const w = minimap.width;
+      const rowCount = rows.length;
+      const colCount = rows[0].length;
+      const scale = Math.min(w / colCount, h / rowCount);
+
+      mapCtx.clearRect(0, 0, w, h);
+      mapCtx.fillStyle = '#000';
+      mapCtx.fillRect(0, 0, w, h);
+
+      const offsetX = (w - colCount * scale) / 2;
+      const offsetY = (h - rowCount * scale) / 2;
+
+      for (let row = 0; row < rowCount; row++) {
+        for (let col = 0; col < colCount; col++) {
+          const ch = rows[row][col];
+          if (ch === '#') mapCtx.fillStyle = '#7c735e';
+          else if (ch === '.') mapCtx.fillStyle = '#1a1a1a';
+          else mapCtx.fillStyle = '#b99742';
+          mapCtx.fillRect(offsetX + col * scale, offsetY + row * scale, scale, scale);
+        }
+      }
+
+      const playerCol = camera.position.x / cellSize;
+      const playerRow = camera.position.z / cellSize;
+      const px = offsetX + playerCol * scale;
+      const py = offsetY + playerRow * scale;
+
+      mapCtx.fillStyle = '#fff';
+      mapCtx.beginPath();
+      mapCtx.arc(px, py, Math.max(2, scale * 0.35), 0, Math.PI * 2);
+      mapCtx.fill();
+
+      mapCtx.strokeStyle = '#ff4d4d';
+      mapCtx.lineWidth = 2;
+      mapCtx.beginPath();
+      mapCtx.moveTo(px, py);
+      mapCtx.lineTo(
+        px + Math.sin(state.yaw) * scale * 1.4,
+        py + Math.cos(state.yaw) * scale * 1.4
+      );
+      mapCtx.stroke();
+    }
+
+    function animateInteractables(time) {
+      state.interactables.forEach((obj, i) => {
+        if (obj.geometry || obj.children.length) {
+          obj.rotation.y += 0.002 + (i % 3) * 0.0008;
+          const baseY = obj.userData.type === 'room' ? 0.9 : 0;
+          if (obj.userData.type !== 'room' && obj.position) {
+            obj.position.y = 1.15 + Math.sin(time * 0.0018 + i) * 0.08;
+          }
+        }
+      });
+    }
+
+    function onPointerLockChange() {
+      const locked = document.pointerLockElement === renderer.domElement;
+      state.canLook = locked;
+      overlay.style.display = locked ? 'none' : 'grid';
+    }
+
+    function onMouseMove(e) {
+      if (!state.canLook) return;
+      const sensitivity = 0.0022;
+      state.yaw -= e.movementX * sensitivity;
+      state.pitch -= e.movementY * sensitivity;
+      state.pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, state.pitch));
+      updateCameraRotation();
+    }
+
+    function onKey(e, down) {
+      switch (e.code) {
+        case 'KeyW': state.forward = down; break;
+        case 'KeyS': state.back = down; break;
+        case 'KeyA': state.left = down; break;
+        case 'KeyD': state.right = down; break;
+        case 'ShiftLeft':
+        case 'ShiftRight': state.sprint = down; break;
+        case 'KeyE':
+          if (down) inspectCurrent();
+          break;
+      }
+    }
+
+    overlay.addEventListener('click', () => {
+      renderer.domElement.requestPointerLock();
+    });
+
+    document.addEventListener('pointerlockchange', onPointerLockChange);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('keydown', e => onKey(e, true));
+    document.addEventListener('keyup', e => onKey(e, false));
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    buildWorldFromGrid();
+    buildPillars();
+    buildRoomMarkers();
+    buildInteractives();
+    buildPortalStubs();
+    addLighting();
+    setupPlayer();
+
+    const clock = new THREE.Clock();
+
+    function tick() {
+      const delta = Math.min(clock.getDelta(), 0.033);
+      updateMovement(delta);
+      findNearestInteractable();
+      animateInteractables(performance.now());
+      drawMinimap();
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+
+    tick();
+
+    console.log('Face Tomb Starter loaded.', {
+      expansionHooks: {
+        rooms: layout.rooms,
+        portals: state.portals,
+        suggestion: 'Add future wings by extending the JSON grid or attach child maps to portal stubs.'
+      }
+    });
+  </script>
+</body>
+</html>
