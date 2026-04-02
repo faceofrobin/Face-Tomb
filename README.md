@@ -40,6 +40,8 @@ Face-Tomb is a browser-based Three.js exploration prototype built as a sequence 
   - Latest variant: closes hallway corner seams with corner posts, keeps the simplified colored hallway progression, and adds an external-space portal hook so an attached Three.js scene can be wired into a destination room.
 - `face_tomb_walkthrough_v10_glass_tower_room.html`
   - Latest variant: adds an in-map teleporter to a dedicated Glass Tower gallery room that renders a spinning image tower (audio removed) with click-to-open lightbox interactivity.
+- `face_tomb_walkthrough_v11_configurable.html`
+  - Latest variant: adds an inline `CONFIG` block for tuning tower size/speed, portal textures, and orb/portal colors without digging through runtime logic.
 
 ### Lightweight v4 variant files
 
@@ -61,6 +63,8 @@ In this snapshot they are effectively identical in structure and size, suggestin
   - Defines grid rows, legend, room metadata, render defaults, materials, and suggested interactive spots.
 - `face_tomb_layout_notes.txt`
   - Brief design note describing how the JSON should drive generated geometry (floors/walls/props).
+- `face_tomb_overall_map_config.json`
+  - Template config reference describing how the inline map layout drives both minimap and main geometry, plus configurable tower/asset/color knobs.
 
 ## What changed across iterations
 
@@ -103,13 +107,16 @@ This repository appears to capture iterative design stages rather than a single 
 12. **Glass Tower room integration**
    - `face_tomb_walkthrough_v10_glass_tower_room.html` wires a teleport portal to an in-world gallery room containing a spinning multi-layer image tower and lightbox interaction.
 
+13. **Configurable runtime pass**
+   - `face_tomb_walkthrough_v11_configurable.html` introduces an explicit configuration block for quick tuning of tower dimensions, portal textures, and orb/portal colors.
+
 ## Quick start
 
 ### Option A: Open files directly
 
 Open any `*.html` file in a browser. For the most complete experience, start with:
 
-- `face_tomb_walkthrough_v10_glass_tower_room.html`
+- `face_tomb_walkthrough_v11_configurable.html`
 
 ### Option B: Use the local PHP index
 
