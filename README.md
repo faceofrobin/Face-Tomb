@@ -42,6 +42,8 @@ Face-Tomb is a browser-based Three.js exploration prototype built as a sequence 
   - Latest variant: adds an in-map teleporter to a dedicated Glass Tower gallery room that renders a spinning image tower (audio removed) with click-to-open lightbox interactivity.
 - `face_tomb_walkthrough_v11_configurable.html`
   - Latest variant: adds an inline `CONFIG` block for tuning tower size/speed, portal textures, and orb/portal colors without digging through runtime logic.
+- `face_tomb_walkthrough_v12_hallway_foyer_door.html`
+  - Latest variant: integrates `AIFACES/HALLWAY` textures into a foyer + hallway space with a clickable entrance door that swings open.
 
 ### Lightweight v4 variant files
 
@@ -110,13 +112,16 @@ This repository appears to capture iterative design stages rather than a single 
 13. **Configurable runtime pass**
    - `face_tomb_walkthrough_v11_configurable.html` introduces an explicit configuration block for quick tuning of tower dimensions, portal textures, and orb/portal colors.
 
+14. **Hallway foyer + click-open door integration**
+   - `face_tomb_walkthrough_v12_hallway_foyer_door.html` adds a hallway foyer portal, hallway texture hooks, and a clickable animated door sequence.
+
 ## Quick start
 
 ### Option A: Open files directly
 
 Open any `*.html` file in a browser. For the most complete experience, start with:
 
-- `face_tomb_walkthrough_v11_configurable.html`
+- `face_tomb_walkthrough_v12_hallway_foyer_door.html`
 
 ### Option B: Use the local PHP index
 
