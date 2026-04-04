@@ -1,0 +1,46 @@
+{
+  "notes": "Template config for Face-Tomb builds. v11 currently reads configuration from inline CONFIG in HTML; mirror values here for easy editing/migration.",
+  "map": {
+    "layout_source": "inline_layout_data",
+    "small_map": "generated from layout.grid in the HTML runtime",
+    "main_map_geometry": "generated from layout.grid + specialSpaces in the HTML runtime"
+  },
+  "tower": {
+    "numSides": 10,
+    "sideWidth": 6.2,
+    "sideHeight": 8.4,
+    "spinSpeed": 0.0022,
+    "roomWidth": 44,
+    "roomDepth": 44,
+    "roomHeight": 14
+  },
+  "assets": {
+    "glassImageBaseUrl": "https://faceofrobin.com/AIFACES/GLASS/",
+    "towerFallbackImages": [
+      "https://faceofrobin.com/AIFACES/GLASS/floor/floor.png",
+      "https://faceofrobin.com/AIFACES/GLASS/floor/roof.png"
+    ],
+    "towerCapFloor": "https://faceofrobin.com/AIFACES/GLASS/floor/floor.png",
+    "towerCapRoof": "https://faceofrobin.com/AIFACES/GLASS/floor/roof.png",
+    "portalTextures": {
+      "glass": "",
+      "external": "",
+      "return": ""
+    }
+  },
+  "colors": {
+    "portals": {
+      "glass": "0xd4a6ff",
+      "glassEmissive": "0x5a2f9b",
+      "external": "0x7cc8ff",
+      "externalEmissive": "0x2e6ad6",
+      "return": "0x66d8ff"
+    },
+    "orbs": {
+      "spawn": "0x8ed0ff",
+      "spawnEmissive": "0x2c6cff",
+      "roomShift": "0x9ec5ff",
+      "roomShiftEmissive": "0x274bca"
+    }
+  }
+}
