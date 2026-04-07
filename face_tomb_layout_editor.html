@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Face Tomb Layout Editor</title>
+  <style>
+    :root { --bg:#0f1115; --panel:#171b22; --line:#2d3440; --text:#e9eef7; --muted:#9cadc5; --accent:#57a6ff; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Inter, system-ui, Arial, sans-serif; background:var(--bg); color:var(--text); }
+    .wrap { display:grid; grid-template-columns: 1.2fr 1fr; gap:14px; padding:14px; min-height:100vh; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; }
+    h1, h2 { margin:0 0 10px; }
+    h1 { font-size:20px; }
+    h2 { font-size:16px; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+    button, select, input, textarea { background:#0e131a; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:7px 10px; }
+    button { cursor:pointer; }
+    button.primary { background:var(--accent); color:#071220; border-color:#68b2ff; font-weight:600; }
+    .muted { color:var(--muted); font-size:13px; }
+    #grid { display:grid; gap:1px; background:#0a0d13; border:1px solid var(--line); overflow:auto; max-height:58vh; }
+    .cell { width:20px; height:20px; display:grid; place-items:center; font-size:11px; user-select:none; cursor:pointer; }
+    .c-\# { background:#5e5141; color:#fff; }
+    .c-\. { background:#1f232c; color:#6f7b8f; }
+    .c-E,.c-A,.c-S,.c-P,.c-T,.c-B,.c-X { background:#8e7638; color:#111; font-weight:700; }
+    .palette { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+    .swatch { min-width:34px; text-align:center; font-weight:700; }
+    .swatch.active { outline:2px solid #fff; }
+    .row { display:grid; grid-template-columns: repeat(4,1fr); gap:8px; margin-bottom:8px; }
+    .row3 { display:grid; grid-template-columns: 70px 70px 1fr auto; gap:6px; margin-bottom:6px; }
+    textarea { width:100%; min-height:260px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .list { max-height:180px; overflow:auto; }
+    @media (max-width: 980px) { .wrap { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card">
+      <h1>Face Tomb GUI Layout Editor</h1>
+      <div class="toolbar">
+        <button id="loadBtn">Reload file</button>
+        <button id="applyJsonBtn">Apply JSON text to GUI</button>
+        <button id="downloadBtn">Download JSON</button>
+        <button class="primary" id="saveBtn">Save to face_tomb_layout.json</button>
+      </div>
+      <p class="muted">This editor updates grid cells, player start, and interactive/teleport-like objects. Save writes to <code>face_tomb_layout.json</code> via <code>save_layout.php</code>.</p>
+      <h2>Paint Grid</h2>
+      <div class="palette" id="palette"></div>
+      <div id="grid"></div>
+    </section>
+
+    <section class="card">
+      <h2>Coordinates + Objects</h2>
+      <div class="row">
+        <label>Cell Size <input id="cellSize" type="number" step="0.1" /></label>
+        <label>Start Row <input id="startRow" type="number" /></label>
+        <label>Start Col <input id="startCol" type="number" /></label>
+        <label>Facing° <input id="startFacing" type="number" /></label>
+      </div>
+
+      <h2>Teleport / Interactive Objects</h2>
+      <div class="toolbar">
+        <button id="addSpotBtn">+ Add object</button>
+      </div>
+      <div id="spots" class="list"></div>
+
+      <h2>Raw Config JSON</h2>
+      <textarea id="jsonBox"></textarea>
+      <p id="status" class="muted">Ready.</p>
+    </section>
+  </div>
+
+  <script>
+    const symbols = ['#', '.', 'E', 'A', 'S', 'P', 'T', 'B', 'X'];
+    const palette = document.getElementById('palette');
+    const gridEl = document.getElementById('grid');
+    const jsonBox = document.getElementById('jsonBox');
+    const spotsEl = document.getElementById('spots');
+    const statusEl = document.getElementById('status');
+    let selected = '#';
+    let layout = null;
+    let isPainting = false;
+
+    function setStatus(msg, bad=false){ statusEl.textContent = msg; statusEl.style.color = bad ? '#ff8383' : '#9cadc5'; }
+
+    function buildPalette(){
+      palette.innerHTML = '';
+      symbols.forEach(s => {
+        const b = document.createElement('button');
+        b.textContent = s;
+        b.className = `swatch c-${CSS.escape(s)} ${selected===s?'active':''}`;
+        b.onclick = () => { selected = s; buildPalette(); };
+        palette.appendChild(b);
+      });
+    }
+
+    function renderGrid(){
+      const rows = layout.grid.rows;
+      const rowCount = rows.length;
+      const colCount = rows[0].length;
+      gridEl.style.gridTemplateColumns = `repeat(${colCount}, 20px)`;
+      gridEl.innerHTML = '';
+      rows.forEach((row, r) => {
+        row.split('').forEach((ch, c) => {
+          const cell = document.createElement('div');
+          cell.className = `cell c-${CSS.escape(ch)}`;
+          cell.textContent = ch;
+          cell.onmousedown = () => { isPainting = true; paintCell(r, c); };
+          cell.onmouseenter = () => { if (isPainting) paintCell(r, c); };
+          gridEl.appendChild(cell);
+        });
+      });
+      document.body.onmouseup = () => { isPainting = false; };
+    }
+
+    function paintCell(r,c){
+      const row = layout.grid.rows[r].split('');
+      row[c] = selected;
+      layout.grid.rows[r] = row.join('');
+      syncJson();
+      renderGrid();
+    }
+
+    function renderForm(){
+      document.getElementById('cellSize').value = layout.grid.cellSize ?? 4;
+      document.getElementById('startRow').value = layout.playerStart?.row ?? 0;
+      document.getElementById('startCol').value = layout.playerStart?.col ?? 0;
+      document.getElementById('startFacing').value = layout.playerStart?.facingDegrees ?? 180;
+      renderSpots();
+    }
+
+    function renderSpots(){
+      spotsEl.innerHTML = '';
+      if (!Array.isArray(layout.suggestedInteractiveSpots)) layout.suggestedInteractiveSpots = [];
+      layout.suggestedInteractiveSpots.forEach((spot, idx) => {
+        const row = document.createElement('div');
+        row.className = 'row3';
+        row.innerHTML = `
+          <input type="number" value="${spot.row ?? 0}" data-k="row" data-i="${idx}" />
+          <input type="number" value="${spot.col ?? 0}" data-k="col" data-i="${idx}" />
+          <input type="text" value="${spot.type ?? ''}" data-k="type" data-i="${idx}" />
+          <button data-del="${idx}">✕</button>
+          <input style="grid-column: 1 / span 4" type="text" value="${spot.text ?? ''}" data-k="text" data-i="${idx}" />
+        `;
+        spotsEl.appendChild(row);
+      });
+      spotsEl.querySelectorAll('input').forEach(inp => {
+        inp.oninput = (e) => {
+          const i = Number(e.target.dataset.i);
+          const k = e.target.dataset.k;
+          let v = e.target.value;
+          if (k === 'row' || k === 'col') v = Number(v);
+          layout.suggestedInteractiveSpots[i][k] = v;
+          syncJson();
+        };
+      });
+      spotsEl.querySelectorAll('button[data-del]').forEach(btn => {
+        btn.onclick = () => {
+          layout.suggestedInteractiveSpots.splice(Number(btn.dataset.del), 1);
+          renderSpots();
+          syncJson();
+        };
+      });
+    }
+
+    function applyFormToLayout(){
+      layout.grid.cellSize = Number(document.getElementById('cellSize').value);
+      layout.playerStart.row = Number(document.getElementById('startRow').value);
+      layout.playerStart.col = Number(document.getElementById('startCol').value);
+      layout.playerStart.facingDegrees = Number(document.getElementById('startFacing').value);
+      syncJson();
+    }
+
+    function syncJson(){ jsonBox.value = JSON.stringify(layout, null, 2); }
+
+    function parseFromText(){
+      layout = JSON.parse(jsonBox.value);
+      renderGrid();
+      renderForm();
+      setStatus('Applied JSON to editor controls.');
+    }
+
+    async function loadLayout(){
+      const res = await fetch('face_tomb_layout.json?_=' + Date.now());
+      layout = await res.json();
+      syncJson();
+      buildPalette();
+      renderGrid();
+      renderForm();
+      setStatus('Loaded face_tomb_layout.json');
+    }
+
+    async function saveLayout(){
+      applyFormToLayout();
+      try {
+        JSON.parse(jsonBox.value);
+      } catch (err) {
+        setStatus('Cannot save: invalid JSON.', true);
+        return;
+      }
+      const res = await fetch('save_layout.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonBox.value
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setStatus('Save failed: ' + (data.error || res.statusText), true);
+        return;
+      }
+      setStatus('Saved ✔ ' + (data.path || 'face_tomb_layout.json'));
+    }
+
+    document.getElementById('loadBtn').onclick = loadLayout;
+    document.getElementById('applyJsonBtn').onclick = () => { try { parseFromText(); } catch(e){ setStatus('Invalid JSON: ' + e.message, true); } };
+    document.getElementById('saveBtn').onclick = saveLayout;
+    document.getElementById('addSpotBtn').onclick = () => { layout.suggestedInteractiveSpots.push({ row: 0, col: 0, type: 'teleport', text: 'New object' }); renderSpots(); syncJson(); };
+    document.getElementById('downloadBtn').onclick = () => {
+      const blob = new Blob([jsonBox.value], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'face_tomb_layout.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+    ['cellSize','startRow','startCol','startFacing'].forEach(id => document.getElementById(id).addEventListener('input', applyFormToLayout));
+
+    loadLayout().catch(e => setStatus('Failed to load layout: ' + e.message, true));
+  </script>
+</body>
+</html>
