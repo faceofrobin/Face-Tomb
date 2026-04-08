@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tomb Config Editor</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#10131a;color:#e9eef9}header{padding:12px 16px;background:#1d2433}main{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}section{background:#161c28;border:1px solid #2a3347;border-radius:8px;padding:10px}label{display:block;margin:8px 0 4px}input,textarea,button{width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid #3a4b69;background:#0f1420;color:#fff}textarea{min-height:520px;font-family:monospace}button{cursor:pointer;background:#223452}button:hover{background:#2d4670}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+</style>
+</head>
+<body>
+<header><strong>Face Tomb Scene Config Editor</strong></header>
+<main>
+  <section>
+    <label>Load config JSON file</label>
+    <input id="fileInput" type="file" accept="application/json" />
+    <label>Quick fields (fresco + core rooms)</label>
+    <div class="row"><input id="frescoSize" placeholder="Fresco size" /><input id="frescoHeightMult" placeholder="Fresco height multiplier" /></div>
+    <div class="row"><input id="glassX" placeholder="Glass room X" /><input id="glassZ" placeholder="Glass room Z" /></div>
+    <div class="row"><input id="hallX" placeholder="Hallway room X" /><input id="hallZ" placeholder="Hallway room Z" /></div>
+    <div class="row"><button id="applyFields">Apply fields to JSON</button><button id="downloadBtn">Download config</button></div>
+    <button id="formatBtn">Format JSON</button>
+  </section>
+  <section>
+    <label>Config JSON (authoritative)</label>
+    <textarea id="jsonArea"></textarea>
+  </section>
+</main>
+<script>
+const defaultConfigUrl='tomb_scene_config.json';
+const jsonArea=document.getElementById('jsonArea');
+const fields={
+  frescoSize:document.getElementById('frescoSize'),frescoHeightMult:document.getElementById('frescoHeightMult'),
+  glassX:document.getElementById('glassX'),glassZ:document.getElementById('glassZ'),hallX:document.getElementById('hallX'),hallZ:document.getElementById('hallZ')
+};
+async function loadDefault(){ const res=await fetch(defaultConfigUrl); const data=await res.json(); jsonArea.value=JSON.stringify(data,null,2); syncFields(); }
+function getJson(){ return JSON.parse(jsonArea.value); }
+function syncFields(){ try{ const c=getJson(); fields.frescoSize.value=c.frescoRoom?.size??''; fields.frescoHeightMult.value=c.frescoRoom?.heightMultiplier??''; fields.glassX.value=c.glassRoom?.center?.x??''; fields.glassZ.value=c.glassRoom?.center?.z??''; fields.hallX.value=c.hallwayRoom?.center?.x??''; fields.hallZ.value=c.hallwayRoom?.center?.z??''; }catch(e){} }
+function applyFields(){ const c=getJson(); c.frescoRoom.size=Number(fields.frescoSize.value); c.frescoRoom.heightMultiplier=Number(fields.frescoHeightMult.value); c.glassRoom.center.x=Number(fields.glassX.value); c.glassRoom.center.z=Number(fields.glassZ.value); c.hallwayRoom.center.x=Number(fields.hallX.value); c.hallwayRoom.center.z=Number(fields.hallZ.value); jsonArea.value=JSON.stringify(c,null,2); }
+function download(){ const blob=new Blob([jsonArea.value],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='tomb_scene_config.json'; a.click(); URL.revokeObjectURL(a.href); }
+fileInput.addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f)return; jsonArea.value=await f.text(); syncFields(); });
+document.getElementById('applyFields').onclick=applyFields;
+document.getElementById('downloadBtn').onclick=download;
+document.getElementById('formatBtn').onclick=()=>{ jsonArea.value=JSON.stringify(getJson(),null,2); syncFields(); };
+loadDefault();
+</script>
+</body>
+</html>

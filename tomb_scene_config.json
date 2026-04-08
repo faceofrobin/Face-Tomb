@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "mainTeleportHubs": [
+    {"type":"hallway_room_portal","title":"RED CUBE HALLWAY TELEPORT","shape":"cube","color":14495342,"position":{"x":58,"y":1.1,"z":42}},
+    {"type":"glass_tower_portal","title":"GLASS TOWER TELEPORT","shape":"ring","color":10183679,"position":{"x":62,"y":1.7,"z":42}},
+    {"type":"impossible_entry","title":"FRESCO HALL TELEPORT","shape":"disc","color":3055871,"position":{"x":66,"y":1.45,"z":42}},
+    {"type":"external_space_portal","title":"MAIN HALL TELEPORT","shape":"cone","color":5559194,"position":{"x":70,"y":1.0,"z":42}}
+  ],
+  "hallwayRoom": {
+    "center": {"x": 412, "y": 0, "z": 126},
+    "size": {"width": 58, "depth": 24, "height": 10}
+  },
+  "glassRoom": {
+    "center": {"x": 352, "y": 0, "z": 126}
+  },
+  "frescoRoom": {
+    "base": {"x": 210, "z": 40},
+    "center": {"x": 270, "z": 12},
+    "size": 60,
+    "heightMultiplier": 3,
+    "artPanel": {"width": 9.5, "height": 13.5}
+  },
+  "futureRooms": [
+    {"name":"Future Home of Echo Archivist","center":{"x":520,"z":80},"size":{"width":26,"depth":20,"height":9},"shape":"box","color":16747115},
+    {"name":"Future Home of Sand Oracle","center":{"x":574,"z":122},"size":{"width":26,"depth":20,"height":9},"shape":"circle","color":8384691},
+    {"name":"Future Home of Prism Choir","center":{"x":628,"z":80},"size":{"width":26,"depth":20,"height":9},"shape":"cone","color":8179711},
+    {"name":"Future Home of Obsidian Scribe","center":{"x":682,"z":122},"size":{"width":26,"depth":20,"height":9},"shape":"diamond","color":14131967},
+    {"name":"Future Home of Spiral Keeper","center":{"x":736,"z":80},"size":{"width":26,"depth":20,"height":9},"shape":"square","color":16765706}
+  ]
+}
