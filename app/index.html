@@ -3,39 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Face Tomb App</title>
+  <title>The Face Tomb — Threshold of the Inner Rooms</title>
   <style>
     *{box-sizing:border-box}
-    html,body{margin:0;height:100%;overflow:hidden;background:#050505;color:#fff;font-family:Arial,Helvetica,sans-serif}
+    html,body{margin:0;height:100%;overflow:hidden;background:#050505;color:#fff;font-family:Arial,Helvetica,sans-serif;touch-action:none}
     #app{position:fixed;inset:0}
-    #hud{position:fixed;top:12px;left:12px;z-index:5;width:min(380px,calc(100vw - 24px));padding:12px 14px;background:rgba(0,0,0,.68);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(4px);font-size:13px;line-height:1.35}
-    #hud h1{margin:0 0 6px;font-size:16px;letter-spacing:.08em}
+    #hud{position:fixed;top:12px;left:12px;z-index:5;width:min(410px,calc(100vw - 24px));padding:12px 14px;background:rgba(0,0,0,.72);border:1px solid rgba(218,184,92,.32);backdrop-filter:blur(4px);font-size:13px;line-height:1.35;box-shadow:0 0 28px rgba(0,0,0,.45)}
+    #hud h1{margin:0 0 6px;font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:#e7d29a}
     #hud small{display:block;opacity:.78;margin-top:6px}
-    #centerDot{position:fixed;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:rgba(255,255,255,.72);z-index:4;pointer-events:none}
-    #start{position:fixed;inset:0;display:grid;place-items:center;z-index:10;background:radial-gradient(circle,rgba(45,38,26,.5),rgba(0,0,0,.92));cursor:pointer;text-align:center;padding:24px}
-    #start div{max-width:620px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.72);padding:24px}
-    #start h2{margin:0 0 10px;letter-spacing:.12em}
-    #msg{position:fixed;right:12px;bottom:12px;z-index:5;width:min(420px,calc(100vw - 24px));background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.18);padding:10px;font-size:13px;line-height:1.35;min-height:42px}
+    #centerDot{position:fixed;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:rgba(231,210,154,.82);z-index:4;pointer-events:none;box-shadow:0 0 12px rgba(231,210,154,.35)}
+    #start{position:fixed;inset:0;display:grid;place-items:center;z-index:10;background:radial-gradient(circle,rgba(74,58,30,.5),rgba(0,0,0,.94));cursor:pointer;text-align:center;padding:24px}
+    #start div{max-width:680px;border:1px solid rgba(218,184,92,.38);background:rgba(0,0,0,.76);padding:26px;box-shadow:0 0 60px rgba(0,0,0,.6)}
+    #start h2{margin:0 0 10px;letter-spacing:.18em;color:#e7d29a;text-transform:uppercase}
+    #start p{margin:0;line-height:1.5;opacity:.9}
+    #msg{position:fixed;right:12px;bottom:12px;z-index:5;width:min(440px,calc(100vw - 24px));background:rgba(0,0,0,.74);border:1px solid rgba(218,184,92,.28);padding:10px;font-size:13px;line-height:1.35;min-height:42px}
     #touch{display:none;position:fixed;inset:auto 0 0 0;z-index:6;pointer-events:none}
     .pad{position:absolute;bottom:24px;width:178px;height:178px;pointer-events:none}.pad.left{left:18px}.pad.right{right:18px}
-    .btn{position:absolute;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.48);border:1px solid rgba(255,255,255,.24);pointer-events:auto;user-select:none;touch-action:none;font-size:20px}.btn:active{background:rgba(255,255,255,.18)}
-    .up{left:61px;top:0}.down{left:61px;bottom:0}.leftBtn{left:0;top:61px}.rightBtn{right:0;top:61px}
+    .btn{position:absolute;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.54);border:1px solid rgba(231,210,154,.34);pointer-events:auto;user-select:none;touch-action:none;font-size:20px;color:#f1dfae;box-shadow:0 0 20px rgba(0,0,0,.35)}
+    .btn.active,.btn:active{background:rgba(218,184,92,.24);transform:scale(.96)}
+    .up{left:60px;top:0}.down{left:60px;bottom:0}.leftBtn{left:0;top:60px}.rightBtn{right:0;top:60px}
     @media(pointer:coarse){#touch{display:block}#msg{padding-bottom:84px}#hud{font-size:12px}}
   </style>
 </head>
 <body>
   <div id="app"></div>
   <div id="centerDot"></div>
-  <div id="hud"><h1>FACE TOMB</h1><div>WASD move · mouse look · Shift sprint · click art to inspect</div><small id="stats">Loading scene API…</small></div>
-  <div id="msg">The PHP API is now feeding this Three.js room.</div>
-  <div id="start"><div><h2>ENTER THE FACE TOMB</h2><p>Click or tap to begin. This viewer is powered by <code>/api/scene.php</code>.</p></div></div>
+  <div id="hud"><h1>The Face Tomb</h1><div>WASD move · mouse look · Shift sprint · click art or doors to inspect</div><small id="stats">Consulting the scene API…</small></div>
+  <div id="msg">You stand inside the outer chamber. The tomb is awake, and the walls are listening.</div>
+  <div id="start"><div><h2>Enter the Face Tomb</h2><p>Cross the threshold carefully. This chamber is rendered in Three.js and fed by <code>/api/scene.php</code>.</p></div></div>
   <div id="touch"><div class="pad left"><div class="btn up" data-k="forward">▲</div><div class="btn down" data-k="back">▼</div><div class="btn leftBtn" data-k="left">◀</div><div class="btn rightBtn" data-k="right">▶</div></div><div class="pad right"><div class="btn up" data-k="lookUp">▲</div><div class="btn down" data-k="lookDown">▼</div><div class="btn leftBtn" data-k="lookLeft">◀</div><div class="btn rightBtn" data-k="lookRight">▶</div></div></div>
 
 <script type="module">
 import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 
 const app=document.getElementById('app'), msg=document.getElementById('msg'), stats=document.getElementById('stats'), start=document.getElementById('start');
-const state={forward:false,back:false,left:false,right:false,lookUp:false,lookDown:false,lookLeft:false,lookRight:false,sprint:false,yaw:Math.PI,pitch:0,ready:false};
+const state={forward:false,back:false,left:false,right:false,lookUp:false,lookDown:false,lookLeft:false,lookRight:false,sprint:false,yaw:0,pitch:0};
+const heldCounts={forward:0,back:0,left:0,right:0,lookUp:0,lookDown:0,lookLeft:0,lookRight:0,sprint:0};
+const activePointers=new Map();
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x070605);scene.fog=new THREE.FogExp2(0x070605,.018);
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,500);camera.position.set(0,1.65,16);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);app.appendChild(renderer.domElement);
@@ -44,12 +48,24 @@ const sun=new THREE.DirectionalLight(0xffe2a8,1.1);sun.position.set(8,12,6);scen
 const textureLoader=new THREE.TextureLoader();
 const colliders=[];const clickable=[];const clock=new THREE.Clock();
 function mat(color,rough=.9){return new THREE.MeshStandardMaterial({color,roughness:rough});}
-const floorMat=mat(0x3b3328), wallMat=mat(0x76664f), ceilingMat=mat(0x24211d), frameMat=mat(0x18120c), goldMat=mat(0xb78f32,.55);
-function addBox(x,y,z,w,h,d,m){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);mesh.position.set(x,y,z);scene.add(mesh);colliders.push({x,z,w,d});return mesh;}
+const floorMat=mat(0x3b3328), wallMat=mat(0x76664f), ceilingMat=mat(0x24211d), frameMat=mat(0x18120c), goldMat=mat(0xb78f32,.55), darkGoldMat=mat(0x6f5520,.75);
+function addBox(x,y,z,w,h,d,m,solid=true){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);mesh.position.set(x,y,z);scene.add(mesh);if(solid)colliders.push({x,z,w,d});return mesh;}
+function addDoorMarker(x,y,z,rotY,label){
+  const group=new THREE.Group();group.position.set(x,y,z);group.rotation.y=rotY;scene.add(group);
+  const slab=new THREE.Mesh(new THREE.BoxGeometry(2.7,3.35,.16),darkGoldMat);slab.position.y=0;group.add(slab);
+  const lintel=new THREE.Mesh(new THREE.BoxGeometry(3.25,.35,.22),goldMat);lintel.position.y=1.85;group.add(lintel);
+  const leftPost=new THREE.Mesh(new THREE.BoxGeometry(.25,3.45,.22),goldMat);leftPost.position.set(-1.62,.05,0);group.add(leftPost);
+  const rightPost=leftPost.clone();rightPost.position.x=1.62;group.add(rightPost);
+  const faceSeal=new THREE.Mesh(new THREE.CircleGeometry(.42,32),new THREE.MeshBasicMaterial({color:0xe7d29a}));faceSeal.position.set(0,.45,-.09);group.add(faceSeal);
+  slab.userData.doorLabel=label;faceSeal.userData.doorLabel=label;clickable.push(slab,faceSeal);
+  return group;
+}
 function buildShell(){
   const W=22,L=42,H=5;
   addBox(0,-.06,0,W,.12,L,floorMat);addBox(0,H+.04,0,W,.12,L,ceilingMat);
   addBox(-W/2,H/2,0,.35,H,L,wallMat);addBox(W/2,H/2,0,.35,H,L,wallMat);addBox(0,H/2,-L/2,W,H,.35,wallMat);addBox(0,H/2,L/2,W,H,.35,wallMat);
+  addDoorMarker(0,1.7,-20.78,0,'The sealed northern door. It is visible now, but not yet opened.');
+  addDoorMarker(10.78,1.7,0,-Math.PI/2,'The eastern door waits for room transition logic.');
   for(let z=-14;z<=14;z+=7){
     const torch=new THREE.PointLight(0xffb35c,1.1,12,2);torch.position.set(-9.7,2.6,z);scene.add(torch);
     const torch2=torch.clone();torch2.position.x=9.7;scene.add(torch2);
@@ -70,29 +86,50 @@ function addArt(item,x,y,z,rotY){
   clickable.push(pane);pane.userData.item=item;
 }
 function collisionMove(pos,next){
-  const radius=.45;for(const c of colliders){if(Math.abs(next.x-c.x)<c.w/2+radius && Math.abs(next.z-c.z)<c.d/2+radius)return pos;}return next;
+  const radius=.45;
+  for(const c of colliders){
+    if(Math.abs(next.x-c.x)<c.w/2+radius && Math.abs(pos.z-c.z)<c.d/2+radius)next.x=pos.x;
+    if(Math.abs(next.x-c.x)<c.w/2+radius && Math.abs(next.z-c.z)<c.d/2+radius)next.z=pos.z;
+  }
+  return next;
+}
+function updateHeld(key,delta){
+  if(!(key in heldCounts))return;
+  heldCounts[key]=Math.max(0,heldCounts[key]+delta);
+  state[key]=heldCounts[key]>0;
 }
 function updateCamera(dt){
-  const lookSpeed=1.6;if(state.lookLeft)state.yaw+=lookSpeed*dt;if(state.lookRight)state.yaw-=lookSpeed*dt;if(state.lookUp)state.pitch+=lookSpeed*dt;if(state.lookDown)state.pitch-=lookSpeed*dt;
+  const lookSpeed=1.9;if(state.lookLeft)state.yaw+=lookSpeed*dt;if(state.lookRight)state.yaw-=lookSpeed*dt;if(state.lookUp)state.pitch+=lookSpeed*dt;if(state.lookDown)state.pitch-=lookSpeed*dt;
   state.pitch=Math.max(-1.2,Math.min(1.2,state.pitch));camera.rotation.order='YXZ';camera.rotation.y=state.yaw;camera.rotation.x=state.pitch;
-  const dir=new THREE.Vector3();const side=new THREE.Vector3();camera.getWorldDirection(dir);dir.y=0;dir.normalize();side.crossVectors(dir,new THREE.Vector3(0,1,0)).normalize();
-  let move=new THREE.Vector3();if(state.forward)move.add(dir);if(state.back)move.sub(dir);if(state.left)move.add(side);if(state.right)move.sub(side);if(move.lengthSq()>0)move.normalize();
+  const dir=new THREE.Vector3();const side=new THREE.Vector3();camera.getWorldDirection(dir);dir.y=0;if(dir.lengthSq()<.0001)dir.set(0,0,-1);dir.normalize();side.crossVectors(dir,new THREE.Vector3(0,1,0)).normalize();
+  let move=new THREE.Vector3();if(state.forward)move.add(dir);if(state.back)move.sub(dir);if(state.left)move.sub(side);if(state.right)move.add(side);if(move.lengthSq()>0)move.normalize();
   const speed=(state.sprint?8.5:4.8)*dt;const next=camera.position.clone().addScaledVector(move,speed);next.y=1.65;camera.position.copy(collisionMove(camera.position,next));
 }
-function rayInspect(){const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(0,0),camera);const hit=ray.intersectObjects(clickable,true)[0];if(hit?.object?.userData?.item){const it=hit.object.userData.item;msg.textContent=`${it.category}: ${it.filename}`;}}
+function rayInspect(){
+  const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(0,0),camera);const hit=ray.intersectObjects(clickable,true)[0];
+  if(hit?.object?.userData?.item){const it=hit.object.userData.item;msg.textContent=`Relic image — ${it.category}: ${it.filename}`;return;}
+  if(hit?.object?.userData?.doorLabel){msg.textContent=hit.object.userData.doorLabel;return;}
+}
 function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);updateCamera(dt);renderer.render(scene,camera);} 
 function bind(){
-  addEventListener('keydown',e=>{if(e.code==='KeyW')state.forward=true;if(e.code==='KeyS')state.back=true;if(e.code==='KeyA')state.left=true;if(e.code==='KeyD')state.right=true;if(e.code==='ShiftLeft')state.sprint=true;});
-  addEventListener('keyup',e=>{if(e.code==='KeyW')state.forward=false;if(e.code==='KeyS')state.back=false;if(e.code==='KeyA')state.left=false;if(e.code==='KeyD')state.right=false;if(e.code==='ShiftLeft')state.sprint=false;});
+  const keyMap={KeyW:'forward',ArrowUp:'forward',KeyS:'back',ArrowDown:'back',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',ShiftLeft:'sprint',ShiftRight:'sprint'};
+  addEventListener('keydown',e=>{const k=keyMap[e.code];if(!k||e.repeat)return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();updateHeld(k,1);});
+  addEventListener('keyup',e=>{const k=keyMap[e.code];if(!k)return;updateHeld(k,-1);});
+  addEventListener('blur',()=>{for(const k of Object.keys(heldCounts)){heldCounts[k]=0;state[k]=false;}activePointers.clear();document.querySelectorAll('.btn.active').forEach(b=>b.classList.remove('active'));});
   document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement){state.yaw-=e.movementX*.0022;state.pitch-=e.movementY*.0022;}});
   renderer.domElement.addEventListener('click',()=>{rayInspect();renderer.domElement.requestPointerLock?.();});start.addEventListener('click',()=>{start.style.display='none';renderer.domElement.requestPointerLock?.();});
-  document.querySelectorAll('[data-k]').forEach(b=>{const k=b.dataset.k;const on=e=>{e.preventDefault();state[k]=true};const off=e=>{e.preventDefault();state[k]=false};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off);});
+  document.querySelectorAll('[data-k]').forEach(b=>{
+    const k=b.dataset.k;
+    b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture?.(e.pointerId);activePointers.set(e.pointerId,{key:k,button:b});b.classList.add('active');updateHeld(k,1);});
+    const release=e=>{const active=activePointers.get(e.pointerId);if(!active)return;e.preventDefault();activePointers.delete(e.pointerId);active.button.classList.remove('active');updateHeld(active.key,-1);};
+    b.addEventListener('pointerup',release);b.addEventListener('pointercancel',release);b.addEventListener('lostpointercapture',release);
+  });
   addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 }
 async function init(){
   bind();buildShell();
-  try{const data=await fetch('../api/scene.php').then(r=>r.json());const all=[...(data.media?.GLASS||[]),...(data.media?.HALLWAY||[]),...(data.media?.ART||[])];placeMedia(all);stats.textContent=`API loaded: ${all.length} media files. ${all.slice(0,24).length} placed in the tomb.`;msg.textContent='Scene API loaded. The room is now data-fed instead of PHP-rendered.';}
-  catch(err){console.error(err);stats.textContent='API failed; showing empty tomb shell.';msg.textContent='Could not load ../api/scene.php. The shell still works.';}
+  try{const data=await fetch('../api/scene.php').then(r=>r.json());const all=[...(data.media?.GLASS||[]),...(data.media?.HALLWAY||[]),...(data.media?.ART||[])];placeMedia(all);stats.textContent=`Scene API answered. ${all.length} relic files found; ${all.slice(0,24).length} placed in the outer chamber.`;msg.textContent='The outer chamber is stable. Movement controls have been reinforced; the sealed doors are now visible.';}
+  catch(err){console.error(err);stats.textContent='The API did not answer; showing the empty outer chamber.';msg.textContent='The tomb shell still stands, but ../api/scene.php could not be reached.';}
   animate();
 }
 init();
