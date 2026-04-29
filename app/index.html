@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Face Tomb — Threshold of the Inner Rooms</title>
+  <title>The Face Tomb — Main Chamber</title>
   <style>
     *{box-sizing:border-box}
     html,body{margin:0;height:100%;overflow:hidden;background:#050505;color:#fff;font-family:Arial,Helvetica,sans-serif;touch-action:none}
     #app{position:fixed;inset:0}
-    #hud{position:fixed;top:12px;left:12px;z-index:5;width:min(410px,calc(100vw - 24px));padding:12px 14px;background:rgba(0,0,0,.72);border:1px solid rgba(218,184,92,.32);backdrop-filter:blur(4px);font-size:13px;line-height:1.35;box-shadow:0 0 28px rgba(0,0,0,.45)}
+    #centerDot{position:fixed;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:rgba(231,210,154,.82);z-index:4;pointer-events:none;box-shadow:0 0 12px rgba(231,210,154,.35)}
+    #hud{position:fixed;top:12px;left:12px;z-index:5;width:min(430px,calc(100vw - 24px));padding:12px 14px;background:rgba(0,0,0,.72);border:1px solid rgba(218,184,92,.32);backdrop-filter:blur(4px);font-size:13px;line-height:1.35;box-shadow:0 0 28px rgba(0,0,0,.45)}
     #hud h1{margin:0 0 6px;font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:#e7d29a}
     #hud small{display:block;opacity:.78;margin-top:6px}
-    #centerDot{position:fixed;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:rgba(231,210,154,.82);z-index:4;pointer-events:none;box-shadow:0 0 12px rgba(231,210,154,.35)}
     #start{position:fixed;inset:0;display:grid;place-items:center;z-index:10;background:radial-gradient(circle,rgba(74,58,30,.5),rgba(0,0,0,.94));cursor:pointer;text-align:center;padding:24px}
-    #start div{max-width:680px;border:1px solid rgba(218,184,92,.38);background:rgba(0,0,0,.76);padding:26px;box-shadow:0 0 60px rgba(0,0,0,.6)}
+    #start div{max-width:710px;border:1px solid rgba(218,184,92,.38);background:rgba(0,0,0,.76);padding:26px;box-shadow:0 0 60px rgba(0,0,0,.6)}
     #start h2{margin:0 0 10px;letter-spacing:.18em;color:#e7d29a;text-transform:uppercase}
     #start p{margin:0;line-height:1.5;opacity:.9}
-    #msg{position:fixed;right:12px;bottom:12px;z-index:5;width:min(440px,calc(100vw - 24px));background:rgba(0,0,0,.74);border:1px solid rgba(218,184,92,.28);padding:10px;font-size:13px;line-height:1.35;min-height:42px}
+    #msg{position:fixed;right:12px;bottom:12px;z-index:5;width:min(460px,calc(100vw - 24px));background:rgba(0,0,0,.74);border:1px solid rgba(218,184,92,.28);padding:10px;font-size:13px;line-height:1.35;min-height:42px}
     #touch{display:none;position:fixed;inset:auto 0 0 0;z-index:6;pointer-events:none}
     .pad{position:absolute;bottom:24px;width:178px;height:178px;pointer-events:none}.pad.left{left:18px}.pad.right{right:18px}
     .btn{position:absolute;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.54);border:1px solid rgba(231,210,154,.34);pointer-events:auto;user-select:none;touch-action:none;font-size:20px;color:#f1dfae;box-shadow:0 0 20px rgba(0,0,0,.35)}
@@ -28,9 +28,9 @@
 <body>
   <div id="app"></div>
   <div id="centerDot"></div>
-  <div id="hud"><h1>The Face Tomb</h1><div>WASD move · mouse look · Shift sprint · click art or doors to inspect</div><small id="stats">Consulting the scene API…</small></div>
-  <div id="msg">You stand inside the outer chamber. The tomb is awake, and the walls are listening.</div>
-  <div id="start"><div><h2>Enter the Face Tomb</h2><p>Cross the threshold carefully. This chamber is rendered in Three.js and fed by <code>/api/scene.php</code>.</p></div></div>
+  <div id="hud"><h1>The Face Tomb</h1><div>WASD move · mouse look · Shift sprint · click structures to inspect</div><small id="stats">Consulting the scene API…</small></div>
+  <div id="msg">You stand in the restored main chamber. The art hallway has been sealed away for later construction.</div>
+  <div id="start"><div><h2>Enter the Main Chamber</h2><p>The first room has been returned to ceremonial scale: a domed stone volume, rotating columns, yellow ritual spheres, and future doors waiting in silence.</p></div></div>
   <div id="touch"><div class="pad left"><div class="btn up" data-k="forward">▲</div><div class="btn down" data-k="back">▼</div><div class="btn leftBtn" data-k="left">◀</div><div class="btn rightBtn" data-k="right">▶</div></div><div class="pad right"><div class="btn up" data-k="lookUp">▲</div><div class="btn down" data-k="lookDown">▼</div><div class="btn leftBtn" data-k="lookLeft">◀</div><div class="btn rightBtn" data-k="lookRight">▶</div></div></div>
 
 <script type="module">
@@ -40,64 +40,97 @@ const app=document.getElementById('app'), msg=document.getElementById('msg'), st
 const state={forward:false,back:false,left:false,right:false,lookUp:false,lookDown:false,lookLeft:false,lookRight:false,sprint:false,yaw:0,pitch:0};
 const heldCounts={forward:0,back:0,left:0,right:0,lookUp:0,lookDown:0,lookLeft:0,lookRight:0,sprint:0};
 const activePointers=new Map();
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x070605);scene.fog=new THREE.FogExp2(0x070605,.018);
-const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,500);camera.position.set(0,1.65,16);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x070605);scene.fog=new THREE.FogExp2(0x070605,.012);
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,600);camera.position.set(0,1.65,16);state.yaw=Math.PI;
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);app.appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xe6d2a2,0x14100b,.8));
-const sun=new THREE.DirectionalLight(0xffe2a8,1.1);sun.position.set(8,12,6);scene.add(sun);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+scene.add(new THREE.HemisphereLight(0xe6d2a2,0x14100b,.72));
+const sun=new THREE.DirectionalLight(0xffe2a8,1.15);sun.position.set(8,16,6);sun.castShadow=true;scene.add(sun);
 const textureLoader=new THREE.TextureLoader();
-const colliders=[];const clickable=[];const clock=new THREE.Clock();
-function mat(color,rough=.9){return new THREE.MeshStandardMaterial({color,roughness:rough});}
-const floorMat=mat(0x3b3328), wallMat=mat(0x76664f), ceilingMat=mat(0x24211d), frameMat=mat(0x18120c), goldMat=mat(0xb78f32,.55), darkGoldMat=mat(0x6f5520,.75);
-function addBox(x,y,z,w,h,d,m,solid=true){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);mesh.position.set(x,y,z);scene.add(mesh);if(solid)colliders.push({x,z,w,d});return mesh;}
+const colliders=[];const clickable=[];const animated=[];const clock=new THREE.Clock();
+const ROOM={w:44,d:44,h:11,domeH:9};
+function mat(color,rough=.9,metal=.02,emissive=0x000000,emissiveIntensity=0){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal,emissive,emissiveIntensity});}
+const floorMat=mat(0x3b3328), wallMat=mat(0x76664f), ceilingMat=mat(0x24211d), frameMat=mat(0x18120c), goldMat=mat(0xb78f32,.55,.12), darkGoldMat=mat(0x6f5520,.75,.08), stoneMat=mat(0x8a8068,.86,.02), glowMat=mat(0xe8d9a0,.5,.05,0xc29f34,1.4), domeMat=mat(0x7f7159,.7,.03,0x211708,.18);
+function addBox(x,y,z,w,h,d,m,solid=true){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);if(solid)colliders.push({x,z,w,d});return mesh;}
+function addCylinder(x,y,z,r,h,m,solid=true,segments=24){const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,segments),m);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);if(solid)colliders.push({x,z,w:r*2,d:r*2});return mesh;}
+function addClickable(object,title,text){object.userData.info={title,text};clickable.push(object);return object;}
 function addDoorMarker(x,y,z,rotY,label){
   const group=new THREE.Group();group.position.set(x,y,z);group.rotation.y=rotY;scene.add(group);
-  const slab=new THREE.Mesh(new THREE.BoxGeometry(2.7,3.35,.16),darkGoldMat);slab.position.y=0;group.add(slab);
-  const lintel=new THREE.Mesh(new THREE.BoxGeometry(3.25,.35,.22),goldMat);lintel.position.y=1.85;group.add(lintel);
-  const leftPost=new THREE.Mesh(new THREE.BoxGeometry(.25,3.45,.22),goldMat);leftPost.position.set(-1.62,.05,0);group.add(leftPost);
-  const rightPost=leftPost.clone();rightPost.position.x=1.62;group.add(rightPost);
-  const faceSeal=new THREE.Mesh(new THREE.CircleGeometry(.42,32),new THREE.MeshBasicMaterial({color:0xe7d29a}));faceSeal.position.set(0,.45,-.09);group.add(faceSeal);
-  slab.userData.doorLabel=label;faceSeal.userData.doorLabel=label;clickable.push(slab,faceSeal);
+  const slab=new THREE.Mesh(new THREE.BoxGeometry(4.2,4.35,.22),darkGoldMat);slab.castShadow=true;slab.receiveShadow=true;group.add(slab);
+  const lintel=new THREE.Mesh(new THREE.BoxGeometry(5.1,.45,.32),goldMat);lintel.position.y=2.35;group.add(lintel);
+  const leftPost=new THREE.Mesh(new THREE.BoxGeometry(.36,4.55,.32),goldMat);leftPost.position.set(-2.42,.05,0);group.add(leftPost);
+  const rightPost=leftPost.clone();rightPost.position.x=2.42;group.add(rightPost);
+  const arch=new THREE.Mesh(new THREE.TorusGeometry(2.08,.16,12,36,Math.PI),goldMat);arch.position.y=2.28;arch.rotation.z=Math.PI;group.add(arch);
+  const faceSeal=new THREE.Mesh(new THREE.CircleGeometry(.5,36),new THREE.MeshBasicMaterial({color:0xe7d29a}));faceSeal.position.set(0,.38,-.13);group.add(faceSeal);
+  addClickable(slab,'SEALED DOOR',label);addClickable(faceSeal,'THE FACE SEAL',label);
   return group;
 }
-function buildShell(){
-  const W=22,L=42,H=5;
-  addBox(0,-.06,0,W,.12,L,floorMat,false);addBox(0,H+.04,0,W,.12,L,ceilingMat,false);
-  addBox(-W/2,H/2,0,.35,H,L,wallMat);addBox(W/2,H/2,0,.35,H,L,wallMat);addBox(0,H/2,-L/2,W,H,.35,wallMat);addBox(0,H/2,L/2,W,H,.35,wallMat);
-  addDoorMarker(0,1.7,-20.78,0,'The sealed northern door. It is visible now, but not yet opened.');
-  addDoorMarker(10.78,1.7,0,-Math.PI/2,'The eastern door waits for room transition logic.');
-  for(let z=-14;z<=14;z+=7){
-    const torch=new THREE.PointLight(0xffb35c,1.1,12,2);torch.position.set(-9.7,2.6,z);scene.add(torch);
-    const torch2=torch.clone();torch2.position.x=9.7;scene.add(torch2);
+function buildDomedMainRoom(){
+  const W=ROOM.w,D=ROOM.d,H=ROOM.h;
+  addBox(0,-.06,0,W,.12,D,floorMat,false);
+  addBox(-W/2,H/2,0,.42,H,D,wallMat);addBox(W/2,H/2,0,.42,H,D,wallMat);addBox(0,H/2,-D/2,W,H,.42,wallMat);addBox(0,H/2,D/2,W,H,.42,wallMat);
+  addBox(0,H+.04,0,W,.12,D,ceilingMat,false);
+  const radius=Math.min(W,D)*.52;
+  const domeGeo=new THREE.SphereGeometry(radius,48,28,0,Math.PI*2,0,Math.PI/2);domeGeo.scale(1,ROOM.domeH/radius,1);
+  const dome=new THREE.Mesh(domeGeo,domeMat);dome.position.set(0,H-.05,0);dome.receiveShadow=true;scene.add(dome);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(radius*.86,.22,14,64),goldMat);ring.rotation.x=Math.PI/2;ring.position.set(0,H+.04,0);scene.add(ring);
+  const oculus=new THREE.Mesh(new THREE.CylinderGeometry(1.08,1.18,.28,32),goldMat);oculus.position.set(0,H+ROOM.domeH-.35,0);scene.add(oculus);
+  const domeLight=new THREE.PointLight(0xffe5b0,2.8,42,2);domeLight.position.set(0,H+ROOM.domeH*.72,0);scene.add(domeLight);
+  addDoorMarker(0,2.2,-D/2+.33,0,'The northern ceremonial door is visible, but room transitions are deliberately disabled for this pass.');
+  addDoorMarker(W/2-.33,2.2,0,-Math.PI/2,'The eastern door will become the art hallway later. For now the gallery has been moved out of the spawn chamber.');
+  addDoorMarker(0,2.2,D/2-.33,Math.PI,'The southern passage is only a promise in the stone.');
+}
+function buildRitualColumns(){
+  const ringRadius=13.5;
+  for(let i=0;i<8;i++){
+    const a=i*Math.PI*2/8+Math.PI/8,x=Math.cos(a)*ringRadius,z=Math.sin(a)*ringRadius;
+    const group=new THREE.Group();group.position.set(x,0,z);scene.add(group);
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(.92,1.15,.46,24),goldMat);base.position.y=.23;group.add(base);
+    const col=new THREE.Mesh(new THREE.CylinderGeometry(.52,.62,8.2,28),stoneMat);col.position.y=4.35;col.castShadow=true;col.receiveShadow=true;group.add(col);
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(1.05,.88,.5,24),goldMat);cap.position.y=8.65;group.add(cap);
+    const band1=new THREE.Mesh(new THREE.TorusGeometry(.64,.055,8,24),goldMat);band1.rotation.x=Math.PI/2;band1.position.y=3.05;group.add(band1);
+    const band2=band1.clone();band2.position.y=5.65;group.add(band2);
+    const orb=new THREE.Mesh(new THREE.SphereGeometry(.34,18,18),glowMat);orb.position.y=9.35;group.add(orb);
+    const light=new THREE.PointLight(0xffd56d,1.15,13,2);light.position.set(x,9.2,z);scene.add(light);
+    animated.push({object:group,speed:i%2?-.22:.22});
+    colliders.push({x,z,w:1.45,d:1.45});
   }
-  const altar=new THREE.Mesh(new THREE.BoxGeometry(4,1.1,2.2),goldMat);altar.position.set(0,.55,-16);scene.add(altar);colliders.push({x:0,z:-16,w:4,d:2.2});
 }
-function placeMedia(items){
-  const images=items.filter(i=>i.type==='image').slice(0,24);let n=0;
-  const rows=[-15,-10,-5,0,5,10,15];
-  for(const z of rows){for(const side of [-1,1]){if(!images[n])return;addArt(images[n++],side*10.76,2.45,z,side<0?Math.PI/2:-Math.PI/2);}}
-  for(let x=-6;x<=6;x+=6){if(images[n])addArt(images[n++],x,2.45,-20.76,0);}
+function buildCentralStructures(){
+  const dais=addCylinder(0,.28,0,5.2,.56,darkGoldMat,false,48);
+  addClickable(dais,'CENTRAL DAIS','A low round platform held over from the older PHP tomb layout. It anchors the main room instead of starting as a picture hallway.');
+  const altar=new THREE.Mesh(new THREE.BoxGeometry(4.4,1.05,2.4),goldMat);altar.position.set(0,.9,0);altar.castShadow=true;altar.receiveShadow=true;scene.add(altar);colliders.push({x:0,z:0,w:4.4,d:2.4});addClickable(altar,'ALTAR OF THE FACE','This central structure remains as a inspectable room marker. Teleport behavior is intentionally left for a later pass.');
+  const vertical=new THREE.Mesh(new THREE.CylinderGeometry(.42,.62,4.4,6),stoneMat);vertical.position.set(0,3.35,0);vertical.castShadow=true;scene.add(vertical);animated.push({object:vertical,speed:.34});
+  const crown=new THREE.Mesh(new THREE.SphereGeometry(.48,24,24),glowMat);crown.position.set(0,5.82,0);scene.add(crown);addClickable(crown,'YELLOW SPHERE','The ritual yellow spheres from the uploaded PHP are retained as markers and light sources.');
+  const crownLight=new THREE.PointLight(0xffd56d,1.9,20,2);crownLight.position.set(0,5.8,0);scene.add(crownLight);
 }
-function addArt(item,x,y,z,rotY){
-  const group=new THREE.Group();group.position.set(x,y,z);group.rotation.y=rotY;scene.add(group);
-  const frame=new THREE.Mesh(new THREE.BoxGeometry(2.45,2.85,.12),frameMat);frame.position.z=.02;group.add(frame);
-  const pane=new THREE.Mesh(new THREE.PlaneGeometry(2.05,2.45),new THREE.MeshBasicMaterial({color:0x222222}));pane.position.z=-.05;group.add(pane);
-  textureLoader.load(item.url,tex=>{tex.colorSpace=THREE.SRGBColorSpace;pane.material=new THREE.MeshBasicMaterial({map:tex});pane.userData.item=item;},undefined,()=>{pane.material.color.set(0x553333);});
-  clickable.push(pane);pane.userData.item=item;
+function buildRoundedArchitecture(){
+  const archMat=mat(0x9c8e6e,.82,.03);
+  const portals=[{x:0,z:-20.6,ry:0},{x:20.6,z:0,ry:-Math.PI/2},{x:0,z:20.6,ry:Math.PI},{x:-20.6,z:0,ry:Math.PI/2}];
+  portals.forEach(p=>{
+    const recess=new THREE.Group();recess.position.set(p.x,.25,p.z);recess.rotation.y=p.ry;scene.add(recess);
+    const left=new THREE.Mesh(new THREE.BoxGeometry(.38,3.3,.55),archMat);left.position.set(-2.35,1.65,0);recess.add(left);
+    const right=left.clone();right.position.x=2.35;recess.add(right);
+    const arch=new THREE.Mesh(new THREE.TorusGeometry(2.35,.18,10,32,Math.PI),archMat);arch.position.set(0,3.25,0);arch.rotation.z=Math.PI;recess.add(arch);
+  });
+}
+function buildDeferredArtHallway(media){
+  // The uploaded PHP had a hallway/gallery path. This pass intentionally keeps art out of the spawn room.
+  // We still load/count the media from /api/scene.php so the later hallway pass can reuse it without changing the API.
+  const count=media.filter(i=>i.type==='image').length;
+  return count;
 }
 function collisionMove(pos,next){
   const radius=.45;
+  const innerX=ROOM.w/2-.75, innerZ=ROOM.d/2-.75;
+  next.x=Math.max(-innerX,Math.min(innerX,next.x));next.z=Math.max(-innerZ,Math.min(innerZ,next.z));
   for(const c of colliders){
     if(Math.abs(next.x-c.x)<c.w/2+radius && Math.abs(pos.z-c.z)<c.d/2+radius)next.x=pos.x;
     if(Math.abs(next.x-c.x)<c.w/2+radius && Math.abs(next.z-c.z)<c.d/2+radius)next.z=pos.z;
   }
   return next;
 }
-function updateHeld(key,delta){
-  if(!(key in heldCounts))return;
-  heldCounts[key]=Math.max(0,heldCounts[key]+delta);
-  state[key]=heldCounts[key]>0;
-}
+function updateHeld(key,delta){if(!(key in heldCounts))return;heldCounts[key]=Math.max(0,heldCounts[key]+delta);state[key]=heldCounts[key]>0;}
 function updateCamera(dt){
   const lookSpeed=1.9;if(state.lookLeft)state.yaw+=lookSpeed*dt;if(state.lookRight)state.yaw-=lookSpeed*dt;if(state.lookUp)state.pitch+=lookSpeed*dt;if(state.lookDown)state.pitch-=lookSpeed*dt;
   state.pitch=Math.max(-1.2,Math.min(1.2,state.pitch));camera.rotation.order='YXZ';camera.rotation.y=state.yaw;camera.rotation.x=state.pitch;
@@ -107,10 +140,9 @@ function updateCamera(dt){
 }
 function rayInspect(){
   const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(0,0),camera);const hit=ray.intersectObjects(clickable,true)[0];
-  if(hit?.object?.userData?.item){const it=hit.object.userData.item;msg.textContent=`Relic image — ${it.category}: ${it.filename}`;return;}
-  if(hit?.object?.userData?.doorLabel){msg.textContent=hit.object.userData.doorLabel;return;}
+  if(hit?.object?.userData?.info){const it=hit.object.userData.info;msg.textContent=`${it.title} — ${it.text}`;return;}
 }
-function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);updateCamera(dt);renderer.render(scene,camera);} 
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);animated.forEach(a=>{a.object.rotation.y+=a.speed*dt;});updateCamera(dt);renderer.render(scene,camera);} 
 function bind(){
   const keyMap={KeyW:'forward',ArrowUp:'forward',KeyS:'back',ArrowDown:'back',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',ShiftLeft:'sprint',ShiftRight:'sprint'};
   addEventListener('keydown',e=>{const k=keyMap[e.code];if(!k||e.repeat)return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();updateHeld(k,1);});
@@ -127,9 +159,9 @@ function bind(){
   addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 }
 async function init(){
-  bind();buildShell();
-  try{const data=await fetch('../api/scene.php').then(r=>r.json());const all=[...(data.media?.GLASS||[]),...(data.media?.HALLWAY||[]),...(data.media?.ART||[])];placeMedia(all);stats.textContent=`Scene API answered. ${all.length} relic files found; ${all.slice(0,24).length} placed in the outer chamber.`;msg.textContent='The outer chamber is stable. Movement controls have been reinforced; the sealed doors are now visible.';}
-  catch(err){console.error(err);stats.textContent='The API did not answer; showing the empty outer chamber.';msg.textContent='The tomb shell still stands, but ../api/scene.php could not be reached.';}
+  bind();buildDomedMainRoom();buildRoundedArchitecture();buildRitualColumns();buildCentralStructures();
+  try{const data=await fetch('../api/scene.php').then(r=>r.json());const all=[...(data.media?.GLASS||[]),...(data.media?.HALLWAY||[]),...(data.media?.ART||[])];const imageCount=buildDeferredArtHallway(all);stats.textContent=`Scene API answered. ${all.length} relic files found; ${imageCount} image relics reserved for the later art hallway.`;msg.textContent='The main chamber has been restored. The gallery path is deferred; the dome, columns, altar, and yellow spheres now define the spawn room.';}
+  catch(err){console.error(err);stats.textContent='The API did not answer; showing the main chamber without media counts.';msg.textContent='The main chamber still stands, but ../api/scene.php could not be reached.';}
   animate();
 }
 init();
