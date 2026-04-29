@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Face Tomb Editor</title>
+<style>
+body{margin:0;font-family:Arial;background:#111;color:#fff}
+#panel{padding:10px}
+button{padding:8px;margin:5px}
+</style>
+</head>
+<body>
+<div id="panel">
+<h2>Face Tomb Editor (early)</h2>
+<button onclick="loadScene()">Load Scene</button>
+<pre id="output"></pre>
+</div>
+<script>
+function loadScene(){
+  fetch('../api/scene.php')
+    .then(r=>r.json())
+    .then(data=>{
+      document.getElementById('output').innerText = JSON.stringify(data,null,2);
+    });
+}
+</script>
+</body>
+</html>
