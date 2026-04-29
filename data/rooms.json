@@ -1,0 +1,35 @@
+[
+  {
+    "id": "hallway",
+    "title": "Le Couloir du Visage",
+    "category": "HALLWAY",
+    "kind": "hallway-gallery",
+    "relic": "framed painting",
+    "description": "A long gallery generated from the HALLWAY directory, with paired artwork along the walls.",
+    "spawn": {"x": 0, "y": 1.65, "z": 13},
+    "config": {
+      "width": 8,
+      "height": 12,
+      "spacing": 6.5,
+      "maxArtWidth": 3,
+      "maxArtHeight": 2.6
+    }
+  },
+  {
+    "id": "glass",
+    "title": "The Glass Chapel",
+    "category": "GLASS",
+    "kind": "glass-tower",
+    "relic": "stained glass shard",
+    "description": "A cylindrical stained-glass chamber generated from the GLASS directory, echoing the old rotating tower.",
+    "spawn": {"x": 0, "y": 1.65, "z": 18},
+    "config": {
+      "sides": 10,
+      "sideWidth": 8,
+      "sideHeight": 9,
+      "layers": 3,
+      "spinSpeed": 0.08
+    },
+    "audio": "https://faceofrobin.com/AIFACES/GLASS/praise.mp3"
+  }
+]
