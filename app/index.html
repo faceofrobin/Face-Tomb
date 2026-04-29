@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Face Tomb App</title>
+<style>
+body{margin:0;background:#000;color:#fff;font-family:Arial}
+#info{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.6);padding:10px}
+</style>
+</head>
+<body>
+<div id="info">Loading Face Tomb...</div>
+<script>
+fetch('../api/scene.php')
+  .then(r=>r.json())
+  .then(data=>{
+    console.log('Scene Data:', data);
+    document.getElementById('info').innerText = 'Loaded scene. Open console.';
+  });
+</script>
+</body>
+</html>
