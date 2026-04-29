@@ -21,14 +21,18 @@
     "category": "GLASS",
     "kind": "glass-tower",
     "relic": "stained glass shard",
-    "description": "A cylindrical stained-glass chamber generated from the GLASS directory, echoing the old rotating tower.",
-    "spawn": { "x": 0, "y": 1.65, "z": 18 },
+    "description": "A tall stained-glass tower generated from the GLASS directory. The chamber is exactly twice the tower diameter, and the tower base sits at viewer eye level on spawn.",
+    "spawn": { "x": 0, "y": 1.65, "z": 22 },
     "config": {
-      "sides": 10,
-      "sideWidth": 8,
-      "sideHeight": 9,
-      "layers": 3,
-      "spinSpeed": 0.08
+      "sides": 12,
+      "towerRadius": 10,
+      "roomScale": 2,
+      "panelWidth": 5.2,
+      "panelHeight": 4.2,
+      "layers": 7,
+      "verticalGap": 3.8,
+      "baseAtEyeLevel": true,
+      "spinSpeed": 0.055
     },
     "audio": "https://faceofrobin.com/AIFACES/GLASS/praise.mp3"
   },
