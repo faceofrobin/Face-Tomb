@@ -1,1 +1,50 @@
-<!DOCTYPE html>...TRUNCATED
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Face Tomb Editor</title>
+<style>
+body{background:#050505;color:#e7d29a;font-family:Arial;margin:0;padding:20px}
+input,textarea,select{width:100%;margin:4px 0;background:#111;color:#fff;border:1px solid #444;padding:6px}
+button{background:#e7d29a;color:#000;padding:8px 12px;border:none;margin:6px 4px;cursor:pointer}
+.card{border:1px solid #444;padding:10px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<h1>Face Tomb Room Editor</h1>
+<div id="rooms"></div>
+<button onclick="addRoom()">Add Room</button>
+<button onclick="save()">Save</button>
+<script>
+let rooms=[];
+async function load(){
+ const data=await fetch('../api/scene.php').then(r=>r.json());
+ rooms=data.rooms||[];
+ render();
+}
+function render(){
+ const el=document.getElementById('rooms');
+ el.innerHTML='';
+ rooms.forEach((r,i)=>{
+  el.innerHTML+=`<div class='card'>
+  <input value='${r.id}' onchange='rooms[${i}].id=this.value'>
+  <input value='${r.title||""}' placeholder='Title' onchange='rooms[${i}].title=this.value'>
+  <input value='${r.category||""}' placeholder='Category (AIFACES folder)' onchange='rooms[${i}].category=this.value'>
+  <select onchange='rooms[${i}].kind=this.value'>
+    <option ${r.kind==='hallway-gallery'?'selected':''}>hallway-gallery</option>
+    <option ${r.kind==='glass-tower'?'selected':''}>glass-tower</option>
+  </select>
+  <textarea onchange='rooms[${i}].description=this.value'>${r.description||""}</textarea>
+  <button onclick='rooms.splice(${i},1);render()'>Delete</button>
+  </div>`;
+ });
+}
+function addRoom(){rooms.push({id:'new-room',title:'New Room',category:'HALLWAY',kind:'hallway-gallery'});render()}
+async function save(){
+ await fetch('../api/rooms.php',{method:'POST',body:JSON.stringify(rooms)});
+ alert('Saved');
+}
+load();
+</script>
+</body>
+</html>
