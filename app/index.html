@@ -62,7 +62,7 @@ function addDoorMarker(x,y,z,rotY,label){
 }
 function buildShell(){
   const W=22,L=42,H=5;
-  addBox(0,-.06,0,W,.12,L,floorMat);addBox(0,H+.04,0,W,.12,L,ceilingMat);
+  addBox(0,-.06,0,W,.12,L,floorMat,false);addBox(0,H+.04,0,W,.12,L,ceilingMat,false);
   addBox(-W/2,H/2,0,.35,H,L,wallMat);addBox(W/2,H/2,0,.35,H,L,wallMat);addBox(0,H/2,-L/2,W,H,.35,wallMat);addBox(0,H/2,L/2,W,H,.35,wallMat);
   addDoorMarker(0,1.7,-20.78,0,'The sealed northern door. It is visible now, but not yet opened.');
   addDoorMarker(10.78,1.7,0,-Math.PI/2,'The eastern door waits for room transition logic.');
