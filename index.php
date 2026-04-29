@@ -147,14 +147,13 @@ foreach ($items as $item) {
     $path = $currentDir . '/' . $item;
     $extension = strtolower(pathinfo($item, PATHINFO_EXTENSION));
     $isDir = is_dir($path);
-    $kind = $isDir ? 'Room / Folder' : strtoupper($extension ?: 'FILE');
     $href = htmlspecialchars($item, ENT_QUOTES, 'UTF-8');
     $label = htmlspecialchars($item, ENT_QUOTES, 'UTF-8');
     $thumb = '';
 
     if ($isDir) {
-        $indexPath = file_exists($path . '/index.html') || file_exists($path . '/index.php');
-        $kind = $indexPath ? 'Enterable Room' : 'Folder';
+        $hasIndex = file_exists($path . '/index.html') || file_exists($path . '/index.php');
+        $kind = $hasIndex ? 'Enterable Room' : 'Folder';
         $thumb = '<div class="glyph">⌂</div>';
     } elseif (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'], true)) {
         $thumb = '<img src="' . $href . '" alt="">';
@@ -172,6 +171,7 @@ foreach ($items as $item) {
         $kind = 'Interface File';
     } else {
         $thumb = '<div class="glyph">◇</div>';
+        $kind = strtoupper($extension ?: 'File');
     }
 
     $directoryItems[] = [
@@ -188,7 +188,7 @@ usort($directoryItems, function($a, $b) {
     return strcasecmp($a['kind'], $b['kind']);
 });
 
-$encodedPunch = htmlspecialchars(json_encode($punchData['items'], JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8');
+$punchJson = json_encode($punchData['items'], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -198,66 +198,16 @@ $encodedPunch = htmlspecialchars(json_encode($punchData['items'], JSON_UNESCAPED
   <title>The Face Tomb — Directory & Punch List</title>
   <style>
     *{box-sizing:border-box}
-    :root{
-      --bg:#050505;
-      --panel:rgba(0,0,0,.72);
-      --panel2:rgba(10,8,5,.82);
-      --gold:#e7d29a;
-      --gold2:#b78f32;
-      --line:rgba(218,184,92,.32);
-      --muted:rgba(255,255,255,.68);
-      --danger:#b75a48;
-      --done:#91c788;
-    }
+    :root{--bg:#050505;--panel:rgba(0,0,0,.72);--panel2:rgba(10,8,5,.82);--gold:#e7d29a;--gold2:#b78f32;--line:rgba(218,184,92,.32);--muted:rgba(255,255,255,.68);--danger:#b75a48;--done:#91c788}
     html,body{margin:0;min-height:100%;background:#050505;color:#fff;font-family:Arial,Helvetica,sans-serif}
-    body{
-      background:
-        radial-gradient(circle at 50% 0%, rgba(92,70,31,.34), transparent 36rem),
-        radial-gradient(circle at 20% 18%, rgba(183,143,50,.14), transparent 24rem),
-        linear-gradient(180deg,#070605,#020202 62%,#000);
-      padding:18px;
-    }
-    a{color:inherit;text-decoration:none}
-    .shell{max-width:1240px;margin:0 auto;display:grid;gap:18px}
-    .hero,.panel{background:var(--panel);border:1px solid var(--line);box-shadow:0 0 42px rgba(0,0,0,.45);backdrop-filter:blur(4px)}
-    .hero{padding:22px;display:grid;grid-template-columns:1.4fr .6fr;gap:18px;align-items:end}
-    h1{margin:0 0 8px;font-size:clamp(26px,5vw,54px);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);line-height:.95}
-    .subtitle{max-width:760px;color:rgba(255,255,255,.82);line-height:1.45;margin:0}
-    .seal{justify-self:end;width:min(170px,38vw);aspect-ratio:1;border-radius:50%;border:1px solid rgba(231,210,154,.5);display:grid;place-items:center;color:var(--gold);font-weight:bold;letter-spacing:.12em;background:radial-gradient(circle,rgba(231,210,154,.12),rgba(0,0,0,.7));box-shadow:inset 0 0 32px rgba(231,210,154,.08),0 0 36px rgba(0,0,0,.5)}
-    .nav{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
-    .button,button{border:1px solid rgba(231,210,154,.38);background:rgba(218,184,92,.12);color:#f1dfae;padding:10px 12px;text-transform:uppercase;letter-spacing:.12em;font-size:12px;cursor:pointer}
-    .button:hover,button:hover{background:rgba(218,184,92,.22)}
-    .layout{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:18px;align-items:start}
-    .panel{padding:16px}
-    .panel h2{margin:0 0 12px;color:var(--gold);font-size:15px;letter-spacing:.16em;text-transform:uppercase}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
-    .card{background:var(--panel2);border:1px solid rgba(218,184,92,.22);min-height:190px;display:flex;flex-direction:column;transition:transform .16s ease,border-color .16s ease,background .16s ease}
-    .card:hover{transform:translateY(-2px);border-color:rgba(231,210,154,.55);background:rgba(24,18,12,.9)}
-    .thumb{height:108px;background:#16120d;border-bottom:1px solid rgba(218,184,92,.18);display:grid;place-items:center;overflow:hidden}
-    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .glyph{color:var(--gold);font-size:28px;opacity:.88;text-align:center;word-break:break-word;padding:12px}
-    .cardBody{padding:12px;display:grid;gap:7px;flex:1}
-    .kind{color:var(--gold);font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
-    .name{font-weight:bold;word-break:break-word;line-height:1.18}
-    .mtime{font-size:11px;color:var(--muted);margin-top:auto}
-    .punchForm{display:grid;gap:10px;margin-bottom:14px}
-    input,select,textarea{width:100%;background:rgba(0,0,0,.52);border:1px solid rgba(218,184,92,.26);color:#fff;padding:10px;font:inherit;border-radius:0;outline:none}
-    textarea{min-height:76px;resize:vertical}
-    input:focus,select:focus,textarea:focus{border-color:rgba(231,210,154,.7)}
-    .row{display:grid;grid-template-columns:1fr auto;gap:10px}
-    .items{display:grid;gap:10px}
-    .punch{border:1px solid rgba(218,184,92,.2);background:rgba(0,0,0,.36);padding:10px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start}
-    .punch.done{border-color:rgba(145,199,136,.35);opacity:.72}
-    .punch.done .punchText{text-decoration:line-through;color:rgba(255,255,255,.62)}
-    .check{width:22px;height:22px;accent-color:var(--gold2);margin-top:2px}
-    .room{display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
-    .punchText{line-height:1.35;word-break:break-word}
-    .meta{font-size:10px;color:var(--muted);margin-top:6px}
-    .mini{font-size:11px;padding:7px 8px;letter-spacing:.08em}
-    .delete{border-color:rgba(183,90,72,.42);color:#ffc7bd;background:rgba(183,90,72,.10)}
-    .empty{color:var(--muted);border:1px dashed rgba(218,184,92,.25);padding:14px;text-align:center}
-    .status{min-height:18px;color:var(--gold);font-size:12px;margin-top:8px}
-    @media(max-width:900px){.hero{grid-template-columns:1fr}.seal{justify-self:start}.layout{grid-template-columns:1fr}.row{grid-template-columns:1fr}.punch{grid-template-columns:auto 1fr}}
+    body{background:radial-gradient(circle at 50% 0%,rgba(92,70,31,.34),transparent 36rem),radial-gradient(circle at 20% 18%,rgba(183,143,50,.14),transparent 24rem),linear-gradient(180deg,#070605,#020202 62%,#000);padding:16px}
+    a{color:inherit;text-decoration:none}.shell{max-width:1320px;margin:0 auto;display:grid;gap:14px}.hero,.panel{background:var(--panel);border:1px solid var(--line);box-shadow:0 0 42px rgba(0,0,0,.45);backdrop-filter:blur(4px)}
+    .hero{padding:20px;display:grid;grid-template-columns:1.4fr .6fr;gap:18px;align-items:end}h1{margin:0 0 8px;font-size:clamp(26px,5vw,54px);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);line-height:.95}.subtitle{max-width:760px;color:rgba(255,255,255,.82);line-height:1.45;margin:0}.seal{justify-self:end;width:min(150px,34vw);aspect-ratio:1;border-radius:50%;border:1px solid rgba(231,210,154,.5);display:grid;place-items:center;color:var(--gold);font-weight:bold;letter-spacing:.12em;background:radial-gradient(circle,rgba(231,210,154,.12),rgba(0,0,0,.7));box-shadow:inset 0 0 32px rgba(231,210,154,.08),0 0 36px rgba(0,0,0,.5)}
+    .nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.button,button{border:1px solid rgba(231,210,154,.38);background:rgba(218,184,92,.12);color:#f1dfae;padding:9px 11px;text-transform:uppercase;letter-spacing:.12em;font-size:11px;cursor:pointer}.button:hover,button:hover{background:rgba(218,184,92,.22)}
+    .panel{padding:14px}.panel h2{margin:0 0 10px;color:var(--gold);font-size:14px;letter-spacing:.16em;text-transform:uppercase}.punchPanel{display:grid;gap:12px}.punchTop{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,.78fr);gap:12px;align-items:start}.punchForm{display:grid;gap:8px}.row{display:grid;grid-template-columns:1fr auto;gap:8px}.items{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}
+    input,textarea{width:100%;background:rgba(0,0,0,.52);border:1px solid rgba(218,184,92,.26);color:#fff;padding:9px;font:inherit;border-radius:0;outline:none}textarea{min-height:66px;resize:vertical}input:focus,textarea:focus{border-color:rgba(231,210,154,.7)}.punch{border:1px solid rgba(218,184,92,.2);background:rgba(0,0,0,.36);padding:9px;display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:start;min-height:76px}.punch.done{border-color:rgba(145,199,136,.35);opacity:.72}.punch.done .punchText{text-decoration:line-through;color:rgba(255,255,255,.62)}.check{width:20px;height:20px;accent-color:var(--gold2);margin-top:2px}.room{display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}.punchText{line-height:1.3;word-break:break-word}.meta{font-size:10px;color:var(--muted);margin-top:5px}.mini{font-size:10px;padding:6px 7px;letter-spacing:.08em}.delete{border-color:rgba(183,90,72,.42);color:#ffc7bd;background:rgba(183,90,72,.10)}.empty{color:var(--muted);border:1px dashed rgba(218,184,92,.25);padding:12px;text-align:center}.status{min-height:16px;color:var(--gold);font-size:12px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}.card{background:var(--panel2);border:1px solid rgba(218,184,92,.22);min-height:132px;display:flex;flex-direction:column;transition:transform .16s ease,border-color .16s ease,background .16s ease}.card:hover{transform:translateY(-2px);border-color:rgba(231,210,154,.55);background:rgba(24,18,12,.9)}.thumb{height:68px;background:#16120d;border-bottom:1px solid rgba(218,184,92,.18);display:grid;place-items:center;overflow:hidden}.thumb img{width:100%;height:100%;object-fit:cover;display:block}.glyph{color:var(--gold);font-size:22px;opacity:.88;text-align:center;word-break:break-word;padding:8px}.cardBody{padding:8px;display:grid;gap:4px;flex:1}.kind{color:var(--gold);font-size:9px;letter-spacing:.12em;text-transform:uppercase;opacity:.85}.name{font-weight:bold;word-break:break-word;line-height:1.12;font-size:13px}.mtime{font-size:10px;color:var(--muted);margin-top:auto}
+    @media(max-width:860px){.hero,.punchTop{grid-template-columns:1fr}.seal{justify-self:start}.row{grid-template-columns:1fr}.items{grid-template-columns:1fr}.grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}.thumb{height:62px}}
   </style>
 </head>
 <body>
@@ -276,25 +226,9 @@ $encodedPunch = htmlspecialchars(json_encode($punchData['items'], JSON_UNESCAPED
       <div class="seal">THE FACE<br>TOMB</div>
     </section>
 
-    <section class="layout">
-      <div class="panel">
-        <h2>Directory of Chambers & Relics</h2>
-        <div class="grid">
-          <?php foreach ($directoryItems as $entry): ?>
-            <a class="card" href="<?= $entry['href'] ?>">
-              <div class="thumb"><?= $entry['thumb'] ?></div>
-              <div class="cardBody">
-                <div class="kind"><?= htmlspecialchars($entry['kind'], ENT_QUOTES, 'UTF-8') ?></div>
-                <div class="name"><?= $entry['label'] ?></div>
-                <div class="mtime">Last touched: <?= htmlspecialchars($entry['mtime'], ENT_QUOTES, 'UTF-8') ?></div>
-              </div>
-            </a>
-          <?php endforeach; ?>
-        </div>
-      </div>
-
-      <aside class="panel">
-        <h2>Room & Feature Punch List</h2>
+    <section class="panel punchPanel">
+      <h2>Room & Feature Punch List</h2>
+      <div class="punchTop">
         <form class="punchForm" id="punchForm">
           <textarea id="newText" placeholder="Write a feature, room, bug, or ominous requirement…"></textarea>
           <div class="row">
@@ -302,102 +236,66 @@ $encodedPunch = htmlspecialchars(json_encode($punchData['items'], JSON_UNESCAPED
             <button type="submit">Inscribe</button>
           </div>
           <datalist id="roomOptions">
-            <option value="Outer Chamber"></option>
-            <option value="Doors"></option>
-            <option value="Movement"></option>
-            <option value="Future Rooms"></option>
-            <option value="Dashboard"></option>
-            <option value="Images"></option>
+            <option value="Outer Chamber"></option><option value="Doors"></option><option value="Movement"></option><option value="Future Rooms"></option><option value="Dashboard"></option><option value="Images"></option>
           </datalist>
+          <div id="status" class="status"></div>
         </form>
-        <div id="punchItems" class="items"></div>
-        <div id="status" class="status"></div>
-      </aside>
+        <div class="empty">The punch list now lives above the chambers so it cannot hide in the crypt-wall margins.</div>
+      </div>
+      <div id="punchItems" class="items"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Directory of Chambers & Relics</h2>
+      <div class="grid">
+        <?php foreach ($directoryItems as $entry): ?>
+          <a class="card" href="<?= $entry['href'] ?>">
+            <div class="thumb"><?= $entry['thumb'] ?></div>
+            <div class="cardBody">
+              <div class="kind"><?= htmlspecialchars($entry['kind'], ENT_QUOTES, 'UTF-8') ?></div>
+              <div class="name"><?= $entry['label'] ?></div>
+              <div class="mtime"><?= htmlspecialchars($entry['mtime'], ENT_QUOTES, 'UTF-8') ?></div>
+            </div>
+          </a>
+        <?php endforeach; ?>
+      </div>
     </section>
   </main>
 
   <script>
-    let punchItems = JSON.parse('<?= $encodedPunch ?>');
+    let punchItems = <?= $punchJson ?: '[]' ?>;
     const list = document.getElementById('punchItems');
     const form = document.getElementById('punchForm');
     const status = document.getElementById('status');
     const newText = document.getElementById('newText');
     const newRoom = document.getElementById('newRoom');
 
-    function escapeHtml(value){
-      return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[char]));
-    }
-
+    function escapeHtml(value){return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[char]));}
+    function displayDate(value){const d = new Date(value || Date.now()); return Number.isNaN(d.getTime()) ? 'just now' : d.toLocaleString();}
     function renderPunchList(){
       const sorted = [...punchItems].sort((a,b) => Number(a.done) - Number(b.done));
-      if(!sorted.length){
-        list.innerHTML = '<div class="empty">No inscriptions yet. The tomb awaits instruction.</div>';
-        return;
-      }
+      if(!sorted.length){list.innerHTML = '<div class="empty">No inscriptions yet. The tomb awaits instruction.</div>';return;}
       list.innerHTML = sorted.map(item => `
         <article class="punch ${item.done ? 'done' : ''}" data-id="${escapeHtml(item.id)}">
           <input class="check" type="checkbox" ${item.done ? 'checked' : ''} aria-label="Mark complete">
-          <div>
-            <span class="room">${escapeHtml(item.room || 'General')}</span>
-            <div class="punchText" contenteditable="true" spellcheck="true">${escapeHtml(item.text)}</div>
-            <div class="meta">Updated ${escapeHtml(new Date(item.updated || item.created || Date.now()).toLocaleString())}</div>
-          </div>
+          <div><span class="room">${escapeHtml(item.room || 'General')}</span><div class="punchText" contenteditable="true" spellcheck="true">${escapeHtml(item.text)}</div><div class="meta">Updated ${escapeHtml(displayDate(item.updated || item.created))}</div></div>
           <button class="mini delete" type="button">Delete</button>
-        </article>
-      `).join('');
+        </article>`).join('');
     }
-
     async function send(action, payload = {}){
       status.textContent = 'Writing to punchlist.json…';
-      const response = await fetch(location.href, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({action, ...payload})
-      });
+      const response = await fetch(location.href, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action, ...payload})});
       const data = await response.json();
       if(!data.ok){ throw new Error(data.error || 'Unknown tomb-writing error.'); }
-      punchItems = data.items;
+      punchItems = data.items || [];
       renderPunchList();
       status.textContent = 'Saved.';
       setTimeout(() => { if(status.textContent === 'Saved.') status.textContent = ''; }, 1400);
     }
-
-    form.addEventListener('submit', async event => {
-      event.preventDefault();
-      const text = newText.value.trim();
-      const room = newRoom.value.trim() || 'General';
-      if(!text) return;
-      try{
-        await send('add', {text, room});
-        newText.value = '';
-      }catch(error){ status.textContent = error.message; }
-    });
-
-    list.addEventListener('change', async event => {
-      const card = event.target.closest('.punch');
-      if(!card || !event.target.classList.contains('check')) return;
-      try{ await send('toggle', {id: card.dataset.id}); }
-      catch(error){ status.textContent = error.message; renderPunchList(); }
-    });
-
-    list.addEventListener('click', async event => {
-      const card = event.target.closest('.punch');
-      if(!card || !event.target.classList.contains('delete')) return;
-      try{ await send('delete', {id: card.dataset.id}); }
-      catch(error){ status.textContent = error.message; }
-    });
-
-    list.addEventListener('focusout', async event => {
-      const textEl = event.target.closest('.punchText');
-      const card = event.target.closest('.punch');
-      if(!textEl || !card) return;
-      const item = punchItems.find(i => i.id === card.dataset.id);
-      const text = textEl.textContent.trim();
-      if(!item || !text || text === item.text) return;
-      try{ await send('edit', {id:item.id, text, room:item.room || 'General'}); }
-      catch(error){ status.textContent = error.message; renderPunchList(); }
-    });
-
+    form.addEventListener('submit', async event => {event.preventDefault();const text = newText.value.trim();const room = newRoom.value.trim() || 'General';if(!text) return;try{await send('add', {text, room});newText.value = '';}catch(error){status.textContent = error.message;}});
+    list.addEventListener('change', async event => {const card = event.target.closest('.punch');if(!card || !event.target.classList.contains('check')) return;try{await send('toggle', {id: card.dataset.id});}catch(error){status.textContent = error.message;renderPunchList();}});
+    list.addEventListener('click', async event => {const card = event.target.closest('.punch');if(!card || !event.target.classList.contains('delete')) return;try{await send('delete', {id: card.dataset.id});}catch(error){status.textContent = error.message;}});
+    list.addEventListener('focusout', async event => {const textEl = event.target.closest('.punchText');const card = event.target.closest('.punch');if(!textEl || !card) return;const item = punchItems.find(i => i.id === card.dataset.id);const text = textEl.textContent.trim();if(!item || !text || text === item.text) return;try{await send('edit', {id:item.id, text, room:item.room || 'General'});}catch(error){status.textContent = error.message;renderPunchList();}});
     renderPunchList();
   </script>
 </body>
