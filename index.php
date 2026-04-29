@@ -16,7 +16,7 @@ echo "<style>
     a:hover { color: #007bff; }
 </style>";
 
-echo "<h2>Directory Listing: " . basename($currentDir) . "</h2>";
+echo "<h2>Directory Listing: baby" . basename($currentDir) . "</h2>";
 echo "<div class='grid'>";
 
 foreach ($items as $item) {
