@@ -18,8 +18,8 @@ jobs:
       - name: Deploy to faceofrobin.com/tomb
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
+          server: gator4175.hostgator.com
+          username: robin@faceofrobin.com
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./
           server-dir: /public_html/tomb/
