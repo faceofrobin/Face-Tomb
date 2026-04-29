@@ -6,7 +6,7 @@
     "kind": "hallway-gallery",
     "relic": "framed painting",
     "description": "A long gallery generated from the HALLWAY directory, with paired artwork along the walls.",
-    "spawn": {"x": 0, "y": 1.65, "z": 13},
+    "spawn": { "x": 0, "y": 1.65, "z": 13 },
     "config": {
       "width": 8,
       "height": 12,
@@ -22,7 +22,7 @@
     "kind": "glass-tower",
     "relic": "stained glass shard",
     "description": "A cylindrical stained-glass chamber generated from the GLASS directory, echoing the old rotating tower.",
-    "spawn": {"x": 0, "y": 1.65, "z": 18},
+    "spawn": { "x": 0, "y": 1.65, "z": 18 },
     "config": {
       "sides": 10,
       "sideWidth": 8,
@@ -31,5 +31,29 @@
       "spinSpeed": 0.08
     },
     "audio": "https://faceofrobin.com/AIFACES/GLASS/praise.mp3"
+  },
+  {
+    "id": "bar",
+    "title": "The Bar of the Face",
+    "category": "BAR",
+    "kind": "bar-room",
+    "relic": "amber bottle",
+    "description": "A native Three.js bar room generated from /AIFACES/BAR: textured wallpaper, floor, bar top, clickable bottle shelves, hero bottle, paper label, glass, and ambient audio.",
+    "spawn": { "x": 0, "y": 1.65, "z": 10.5 },
+    "config": {
+      "shelfStartY": 1.82,
+      "shelfGap": 2.15,
+      "shelfThickness": 0.10,
+      "bottleScale": 0.92,
+      "labelScale": 1.20,
+      "labelWidthScale": 1.45,
+      "heroBottleX": 0,
+      "heroBottleY": 3.42,
+      "heroBottleZ": 2.75,
+      "glassX": 0.55,
+      "glassY": 3.28,
+      "glassZ": 2.65,
+      "musicVolume": 0.14
+    }
   }
 ]
