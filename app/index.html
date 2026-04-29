@@ -2,46 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>The Face Tomb — Main Chamber</title>
   <style>
-    *{box-sizing:border-box}
-    html,body{margin:0;height:100%;overflow:hidden;background:#050505;color:#fff;font-family:Arial,Helvetica,sans-serif;touch-action:none}
-    #app{position:fixed;inset:0}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;height:100%;overflow:hidden;background:#050505;color:#fff;font-family:Arial,Helvetica,sans-serif;touch-action:none;overscroll-behavior:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+    #app{position:fixed;inset:0;user-select:none;-webkit-user-select:none;touch-action:none}
+    canvas{display:block;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
     #centerDot{position:fixed;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:rgba(231,210,154,.82);z-index:4;pointer-events:none;box-shadow:0 0 12px rgba(231,210,154,.35)}
-    #hud{position:fixed;top:12px;left:12px;z-index:5;width:min(430px,calc(100vw - 24px));padding:12px 14px;background:rgba(0,0,0,.72);border:1px solid rgba(218,184,92,.32);backdrop-filter:blur(4px);font-size:13px;line-height:1.35;box-shadow:0 0 28px rgba(0,0,0,.45)}
+    #hud{position:fixed;top:12px;left:12px;z-index:5;width:min(430px,calc(100vw - 24px));padding:12px 14px;background:rgba(0,0,0,.72);border:1px solid rgba(218,184,92,.32);backdrop-filter:blur(4px);font-size:13px;line-height:1.35;box-shadow:0 0 28px rgba(0,0,0,.45);user-select:none;-webkit-user-select:none}
     #hud h1{margin:0 0 6px;font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:#e7d29a}
     #hud small{display:block;opacity:.78;margin-top:6px}
-    #start{position:fixed;inset:0;display:grid;place-items:center;z-index:10;background:radial-gradient(circle,rgba(74,58,30,.5),rgba(0,0,0,.94));cursor:pointer;text-align:center;padding:24px}
+    #toolRow{position:fixed;top:12px;right:12px;z-index:7;display:flex;gap:8px;align-items:center;user-select:none;-webkit-user-select:none;touch-action:none}
+    #noclip{appearance:none;border:1px solid rgba(231,210,154,.48);background:rgba(218,184,92,.82);color:#130e06;border-radius:999px;padding:9px 12px;font-weight:800;font-size:11px;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 0 22px rgba(0,0,0,.42);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:pointer}
+    #noclip.on{background:rgba(55,147,255,.9);border-color:rgba(160,210,255,.75);color:#eef7ff;box-shadow:0 0 24px rgba(55,147,255,.35)}
+    #start{position:fixed;inset:0;display:grid;place-items:center;z-index:10;background:radial-gradient(circle,rgba(74,58,30,.5),rgba(0,0,0,.94));cursor:pointer;text-align:center;padding:24px;user-select:none;-webkit-user-select:none;touch-action:none}
     #start div{max-width:710px;border:1px solid rgba(218,184,92,.38);background:rgba(0,0,0,.76);padding:26px;box-shadow:0 0 60px rgba(0,0,0,.6)}
     #start h2{margin:0 0 10px;letter-spacing:.18em;color:#e7d29a;text-transform:uppercase}
     #start p{margin:0;line-height:1.5;opacity:.9}
-    #msg{position:fixed;right:12px;bottom:12px;z-index:5;width:min(460px,calc(100vw - 24px));background:rgba(0,0,0,.74);border:1px solid rgba(218,184,92,.28);padding:10px;font-size:13px;line-height:1.35;min-height:42px}
-    #touch{display:none;position:fixed;inset:auto 0 0 0;z-index:6;pointer-events:none}
-    .pad{position:absolute;bottom:24px;width:178px;height:178px;pointer-events:none}.pad.left{left:18px}.pad.right{right:18px}
-    .btn{position:absolute;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.54);border:1px solid rgba(231,210,154,.34);pointer-events:auto;user-select:none;touch-action:none;font-size:20px;color:#f1dfae;box-shadow:0 0 20px rgba(0,0,0,.35)}
+    #msg{position:fixed;right:12px;bottom:12px;z-index:5;width:min(460px,calc(100vw - 24px));background:rgba(0,0,0,.74);border:1px solid rgba(218,184,92,.28);padding:10px;font-size:13px;line-height:1.35;min-height:42px;user-select:none;-webkit-user-select:none}
+    #touch{display:none;position:fixed;inset:auto 0 0 0;z-index:6;pointer-events:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none}
+    .pad{position:absolute;bottom:24px;width:178px;height:178px;pointer-events:none;user-select:none;-webkit-user-select:none}.pad.left{left:18px}.pad.right{right:18px}
+    .btn{position:absolute;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.54);border:1px solid rgba(231,210,154,.34);pointer-events:auto;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none;font-size:20px;color:#f1dfae;box-shadow:0 0 20px rgba(0,0,0,.35);cursor:pointer}
     .btn.active,.btn:active{background:rgba(218,184,92,.24);transform:scale(.96)}
-    .up{left:60px;top:0}.down{left:60px;bottom:0}.leftBtn{left:0;top:60px}.rightBtn{right:0;top:60px}
-    @media(pointer:coarse){#touch{display:block}#msg{padding-bottom:84px}#hud{font-size:12px}}
+    .up{left:60px;top:0}.down{left:60px;bottom:0}.leftBtn{left:0;top:60px}.rightBtn{right:0;top:60px}.jumpBtn{left:60px;top:60px;font-size:15px;font-weight:800;letter-spacing:.04em}
+    @media(pointer:coarse){#touch{display:block}#msg{padding-bottom:84px}#hud{font-size:12px;right:12px;width:auto;max-width:calc(100vw - 118px)}#toolRow{top:auto;right:18px;bottom:212px}#noclip{padding:10px 12px}}
   </style>
 </head>
 <body>
   <div id="app"></div>
   <div id="centerDot"></div>
-  <div id="hud"><h1>The Face Tomb</h1><div>WASD move · mouse look · Shift sprint · click structures to inspect</div><small id="stats">Consulting the scene API…</small></div>
+  <div id="hud"><h1>The Face Tomb</h1><div>WASD move · mouse look · Shift sprint · Space jump · click structures to inspect</div><small id="stats">Consulting the scene API…</small></div>
+  <div id="toolRow"><button id="noclip" type="button" aria-pressed="false">Noclip</button></div>
   <div id="msg">You stand in the restored main chamber. The art hallway has been sealed away for later construction.</div>
   <div id="start"><div><h2>Enter the Main Chamber</h2><p>The first room has been returned to ceremonial scale: a domed stone volume, rotating columns, yellow ritual spheres, and future doors waiting in silence.</p></div></div>
-  <div id="touch"><div class="pad left"><div class="btn up" data-k="forward">▲</div><div class="btn down" data-k="back">▼</div><div class="btn leftBtn" data-k="left">◀</div><div class="btn rightBtn" data-k="right">▶</div></div><div class="pad right"><div class="btn up" data-k="lookUp">▲</div><div class="btn down" data-k="lookDown">▼</div><div class="btn leftBtn" data-k="lookLeft">◀</div><div class="btn rightBtn" data-k="lookRight">▶</div></div></div>
+  <div id="touch"><div class="pad left"><div class="btn up" data-k="forward">▲</div><div class="btn down" data-k="back">▼</div><div class="btn leftBtn" data-k="left">◀</div><div class="btn rightBtn" data-k="right">▶</div><div class="btn jumpBtn" data-action="jump">JUMP</div></div><div class="pad right"><div class="btn up" data-k="lookUp">▲</div><div class="btn down" data-k="lookDown">▼</div><div class="btn leftBtn" data-k="lookLeft">◀</div><div class="btn rightBtn" data-k="lookRight">▶</div></div></div>
 
 <script type="module">
 import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
 
-const app=document.getElementById('app'), msg=document.getElementById('msg'), stats=document.getElementById('stats'), start=document.getElementById('start');
-const state={forward:false,back:false,left:false,right:false,lookUp:false,lookDown:false,lookLeft:false,lookRight:false,sprint:false,yaw:0,pitch:0};
+const app=document.getElementById('app'), msg=document.getElementById('msg'), stats=document.getElementById('stats'), start=document.getElementById('start'), noclipBtn=document.getElementById('noclip');
+const BASE_EYE=1.65;
+const state={forward:false,back:false,left:false,right:false,lookUp:false,lookDown:false,lookLeft:false,lookRight:false,sprint:false,noclip:false,yaw:0,pitch:0,velY:0,onGround:true};
 const heldCounts={forward:0,back:0,left:0,right:0,lookUp:0,lookDown:0,lookLeft:0,lookRight:0,sprint:0};
 const activePointers=new Map();
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x070605);scene.fog=new THREE.FogExp2(0x070605,.012);
-const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,600);camera.position.set(0,1.65,16);state.yaw=Math.PI;
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,600);camera.position.set(0,BASE_EYE,16);state.yaw=Math.PI;
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);app.appendChild(renderer.domElement);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 scene.add(new THREE.HemisphereLight(0xe6d2a2,0x14100b,.72));
@@ -121,6 +127,7 @@ function buildDeferredArtHallway(media){
   return count;
 }
 function collisionMove(pos,next){
+  if(state.noclip)return next;
   const radius=.45;
   const innerX=ROOM.w/2-.75, innerZ=ROOM.d/2-.75;
   next.x=Math.max(-innerX,Math.min(innerX,next.x));next.z=Math.max(-innerZ,Math.min(innerZ,next.z));
@@ -131,30 +138,53 @@ function collisionMove(pos,next){
   return next;
 }
 function updateHeld(key,delta){if(!(key in heldCounts))return;heldCounts[key]=Math.max(0,heldCounts[key]+delta);state[key]=heldCounts[key]>0;}
+function triggerJump(){
+  if(state.noclip){camera.position.y+=.7;return;}
+  if(!state.onGround)return;
+  state.velY=5.2;state.onGround=false;
+}
+function updateVertical(dt){
+  if(state.noclip){state.velY=0;state.onGround=false;return;}
+  state.velY-=13.5*dt;
+  camera.position.y+=state.velY*dt;
+  if(camera.position.y<=BASE_EYE){camera.position.y=BASE_EYE;state.velY=0;state.onGround=true;}
+}
 function updateCamera(dt){
   const lookSpeed=1.9;if(state.lookLeft)state.yaw+=lookSpeed*dt;if(state.lookRight)state.yaw-=lookSpeed*dt;if(state.lookUp)state.pitch+=lookSpeed*dt;if(state.lookDown)state.pitch-=lookSpeed*dt;
   state.pitch=Math.max(-1.2,Math.min(1.2,state.pitch));camera.rotation.order='YXZ';camera.rotation.y=state.yaw;camera.rotation.x=state.pitch;
   const dir=new THREE.Vector3();const side=new THREE.Vector3();camera.getWorldDirection(dir);dir.y=0;if(dir.lengthSq()<.0001)dir.set(0,0,-1);dir.normalize();side.crossVectors(dir,new THREE.Vector3(0,1,0)).normalize();
   let move=new THREE.Vector3();if(state.forward)move.add(dir);if(state.back)move.sub(dir);if(state.left)move.sub(side);if(state.right)move.add(side);if(move.lengthSq()>0)move.normalize();
-  const speed=(state.sprint?8.5:4.8)*dt;const next=camera.position.clone().addScaledVector(move,speed);next.y=1.65;camera.position.copy(collisionMove(camera.position,next));
+  const speed=(state.sprint?8.5:4.8)*dt;const next=camera.position.clone().addScaledVector(move,speed);camera.position.copy(collisionMove(camera.position,next));updateVertical(dt);
 }
 function rayInspect(){
   const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(0,0),camera);const hit=ray.intersectObjects(clickable,true)[0];
   if(hit?.object?.userData?.info){const it=hit.object.userData.info;msg.textContent=`${it.title} — ${it.text}`;return;}
 }
+function setNoclip(on){
+  state.noclip=on;noclipBtn.classList.toggle('on',on);noclipBtn.setAttribute('aria-pressed',String(on));
+  msg.textContent=on?'Noclip is blue and active. The walls now politely fail to exist.':'Noclip is yellow and off. The tomb is solid again.';
+  if(!on && camera.position.y<BASE_EYE){camera.position.y=BASE_EYE;state.velY=0;state.onGround=true;}
+}
 function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);animated.forEach(a=>{a.object.rotation.y+=a.speed*dt;});updateCamera(dt);renderer.render(scene,camera);} 
 function bind(){
   const keyMap={KeyW:'forward',ArrowUp:'forward',KeyS:'back',ArrowDown:'back',KeyA:'left',ArrowLeft:'left',KeyD:'right',ArrowRight:'right',ShiftLeft:'sprint',ShiftRight:'sprint'};
-  addEventListener('keydown',e=>{const k=keyMap[e.code];if(!k||e.repeat)return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();updateHeld(k,1);});
+  ['contextmenu','selectstart','dragstart','dblclick'].forEach(type=>document.addEventListener(type,e=>{if(e.target.closest('#touch,#toolRow,#start,canvas'))e.preventDefault();},{passive:false}));
+  addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();triggerJump();return;}const k=keyMap[e.code];if(!k||e.repeat)return;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();updateHeld(k,1);});
   addEventListener('keyup',e=>{const k=keyMap[e.code];if(!k)return;updateHeld(k,-1);});
   addEventListener('blur',()=>{for(const k of Object.keys(heldCounts)){heldCounts[k]=0;state[k]=false;}activePointers.clear();document.querySelectorAll('.btn.active').forEach(b=>b.classList.remove('active'));});
   document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement){state.yaw-=e.movementX*.0022;state.pitch-=e.movementY*.0022;}});
-  renderer.domElement.addEventListener('click',()=>{rayInspect();renderer.domElement.requestPointerLock?.();});start.addEventListener('click',()=>{start.style.display='none';renderer.domElement.requestPointerLock?.();});
+  renderer.domElement.addEventListener('click',()=>{rayInspect();renderer.domElement.requestPointerLock?.();});start.addEventListener('click',e=>{e.preventDefault();start.style.display='none';renderer.domElement.requestPointerLock?.();},{passive:false});
+  noclipBtn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();setNoclip(!state.noclip);},{passive:false});
   document.querySelectorAll('[data-k]').forEach(b=>{
     const k=b.dataset.k;
-    b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture?.(e.pointerId);activePointers.set(e.pointerId,{key:k,button:b});b.classList.add('active');updateHeld(k,1);});
-    const release=e=>{const active=activePointers.get(e.pointerId);if(!active)return;e.preventDefault();activePointers.delete(e.pointerId);active.button.classList.remove('active');updateHeld(active.key,-1);};
-    b.addEventListener('pointerup',release);b.addEventListener('pointercancel',release);b.addEventListener('lostpointercapture',release);
+    b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();b.setPointerCapture?.(e.pointerId);activePointers.set(e.pointerId,{key:k,button:b});b.classList.add('active');updateHeld(k,1);},{passive:false});
+    const release=e=>{const active=activePointers.get(e.pointerId);if(!active)return;e.preventDefault();e.stopPropagation();activePointers.delete(e.pointerId);active.button.classList.remove('active');updateHeld(active.key,-1);};
+    b.addEventListener('pointerup',release,{passive:false});b.addEventListener('pointercancel',release,{passive:false});b.addEventListener('lostpointercapture',release,{passive:false});
+  });
+  document.querySelectorAll('[data-action="jump"]').forEach(b=>{
+    b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();b.classList.add('active');triggerJump();},{passive:false});
+    const release=e=>{e.preventDefault();e.stopPropagation();b.classList.remove('active');};
+    b.addEventListener('pointerup',release,{passive:false});b.addEventListener('pointercancel',release,{passive:false});b.addEventListener('lostpointercapture',release,{passive:false});
   });
   addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 }
