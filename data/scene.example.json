@@ -1,6 +1,44 @@
 {
-  "rooms": [],
+  "rooms": [
+    {
+      "id": "entry",
+      "name": "Entry Tomb",
+      "x": 0,
+      "z": 0,
+      "width": 22,
+      "length": 42,
+      "height": 5,
+      "playerStart": {"x": 0, "y": 1.65, "z": 16, "yaw": 3.14159},
+      "doors": [
+        {"id": "entry-east-door", "label": "East Door", "side": "east", "offset": 0, "to": "east-gallery", "spawn": {"x": 24, "y": 1.65, "z": 0, "yaw": -1.5708}},
+        {"id": "entry-north-door", "label": "North Door", "side": "north", "offset": 0, "to": "reliquary", "spawn": {"x": 0, "y": 1.65, "z": -29, "yaw": 3.14159}}
+      ]
+    },
+    {
+      "id": "east-gallery",
+      "name": "East Gallery",
+      "x": 34,
+      "z": 0,
+      "width": 22,
+      "length": 42,
+      "height": 5,
+      "doors": [
+        {"id": "east-gallery-west-door", "label": "Back to Entry Tomb", "side": "west", "offset": 0, "to": "entry", "spawn": {"x": 9, "y": 1.65, "z": 0, "yaw": 1.5708}}
+      ]
+    },
+    {
+      "id": "reliquary",
+      "name": "The Reliquary", "x": 0,
+      "z": -52,
+      "width": 22,
+      "length": 26,
+      "height": 5,
+      "doors": [
+        {"id": "reliquary-south-door", "label": "Back to Entry Tomb", "side": "south", "offset": 0, "to": "entry", "spawn": {"x": 0, "y": 1.65, "z": -18, "yaw": 0}}
+      ]
+    }
+  ],
   "objects": [],
   "lights": [],
-  "playerStart": {"x":0,"y":1.6,"z":0}
+  "playerStart": {"x": 0, "y": 1.65, "z": 16, "yaw": 3.14159}
 }
