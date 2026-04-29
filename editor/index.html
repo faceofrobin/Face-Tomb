@@ -5,10 +5,14 @@
 <title>Face Tomb Editor</title>
 <style>
 body{background:#050505;color:#e7d29a;font-family:Arial;margin:0;padding:20px}
-input,textarea,select{width:100%;margin:4px 0;background:#111;color:#fff;border:1px solid #444;padding:6px}
-input[type=range]{width:100%}
-button{background:#e7d29a;color:#000;padding:8px 12px;border:none;margin:6px 4px;cursor:pointer}
-.card{border:1px solid #444;padding:10px;margin-bottom:12px}
+input,textarea,select{width:100%;margin:4px 0 12px;background:#111;color:#fff;border:1px solid #444;padding:6px;box-sizing:border-box}
+input[type=range]{width:100%;padding:0;margin:6px 0 14px}
+label{display:flex;justify-content:space-between;gap:16px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#f0dca2}
+button{background:#e7d29a;color:#000;padding:8px 12px;border:none;margin:6px 4px 6px 0;cursor:pointer;font-weight:bold}
+button.secondary{background:#111;color:#e7d29a;border:1px solid #555}
+.card{border:1px solid #444;padding:12px;margin-bottom:12px;background:rgba(255,255,255,.025)}
+h1,h2{letter-spacing:.08em;text-transform:uppercase}
+small{color:#bda86f}
 </style>
 </head>
 <body>
@@ -16,6 +20,7 @@ button{background:#e7d29a;color:#000;padding:8px 12px;border:none;margin:6px 4px
 
 <h2>Movement</h2>
 <div id="movement" class="card"></div>
+<button class="secondary" onclick="resetMovement()">Reset Movement Defaults</button>
 
 <h2>Rooms</h2>
 <div id="rooms"></div>
@@ -23,23 +28,39 @@ button{background:#e7d29a;color:#000;padding:8px 12px;border:none;margin:6px 4px
 <button onclick="save()">Save</button>
 
 <script>
+const DEFAULT_MOVEMENT={
+ walkSpeed:4.8,
+ runSpeed:8.5,
+ mouseLookSensitivity:0.0022,
+ joystickLookSpeed:2.65,
+ joystickPitchSpeed:1.9,
+ jumpHeight:5.2,
+ gravity:13.5,
+ joystickDeadzone:0.08,
+ playerRadius:0.45,
+ mainSpawnX:0,
+ mainSpawnZ:18.6,
+ barSpawnX:0,
+ barSpawnZ:9.2
+};
 let rooms=[];
-let config={movement:{}};
+let config={movement:{...DEFAULT_MOVEMENT}};
 
 async function load(){
  const [scene,cfg]=await Promise.all([
-  fetch('../api/scene.php').then(r=>r.json()),
-  fetch('../api/config.php').then(r=>r.json())
+  fetch('../api/scene.php?ts='+Date.now()).then(r=>r.json()),
+  fetch('../api/config.php?ts='+Date.now()).then(r=>r.json()).catch(()=>({movement:{}}))
  ]);
  rooms=scene.rooms||[];
- config=cfg||{movement:{}};
+ config={movement:{...DEFAULT_MOVEMENT,...(cfg.movement||{})}};
  render();
 }
 
 function slider(label,key,min,max,step){
- const v=config.movement[key]??0;
+ const v=Number(config.movement[key]??DEFAULT_MOVEMENT[key]);
+ const shown=step<0.01?v.toFixed(4):v.toFixed(step<0.1?2:1);
  return `
-  <label>${label}: ${v}</label>
+  <label><span>${label}</span><strong>${shown}</strong></label>
   <input type="range" min="${min}" max="${max}" step="${step}" value="${v}"
    oninput="config.movement.${key}=parseFloat(this.value);render()">
  `;
@@ -49,36 +70,46 @@ function render(){
  document.getElementById('movement').innerHTML=
   slider('Walk Speed','walkSpeed',1,10,0.1)+
   slider('Run Speed','runSpeed',2,15,0.1)+
+  slider('Mouse Look Sensitivity','mouseLookSensitivity',0.0005,0.006,0.0001)+
+  slider('Joystick Pan Speed','joystickLookSpeed',0.5,5,0.05)+
+  slider('Joystick Pitch Speed','joystickPitchSpeed',0.5,5,0.05)+
   slider('Jump Height','jumpHeight',1,12,0.1)+
   slider('Gravity','gravity',5,25,0.1)+
-  slider('Look Speed','joystickLookSpeed',0.5,5,0.05)+
-  slider('Pitch Speed','joystickPitchSpeed',0.5,5,0.05);
+  slider('Joystick Deadzone','joystickDeadzone',0,0.25,0.01)+
+  slider('Player Collision Radius','playerRadius',0.2,1.2,0.05)+
+  slider('Main Spawn X','mainSpawnX',-20,20,0.1)+
+  slider('Main Spawn Z','mainSpawnZ',-20,20,0.1)+
+  slider('Bar Spawn X','barSpawnX',-10,10,0.1)+
+  slider('Bar Spawn Z','barSpawnZ',-10,10,0.1)+
+  '<small>Changes apply after saving and reloading the viewer.</small>';
 
  const el=document.getElementById('rooms');
  el.innerHTML='';
  rooms.forEach((r,i)=>{
   el.innerHTML+=`<div class='card'>
-  <input value='${r.id}' onchange='rooms[${i}].id=this.value'>
-  <input value='${r.title||""}' onchange='rooms[${i}].title=this.value'>
-  <input value='${r.category||""}' onchange='rooms[${i}].category=this.value'>
+  <input value='${r.id}' placeholder='Room ID' onchange='rooms[${i}].id=this.value'>
+  <input value='${r.title||""}' placeholder='Title' onchange='rooms[${i}].title=this.value'>
+  <input value='${r.category||""}' placeholder='Category (AIFACES folder)' onchange='rooms[${i}].category=this.value'>
   <select onchange='rooms[${i}].kind=this.value'>
+    <option ${r.kind==='bar-room'?'selected':''}>bar-room</option>
     <option ${r.kind==='hallway-gallery'?'selected':''}>hallway-gallery</option>
     <option ${r.kind==='glass-tower'?'selected':''}>glass-tower</option>
   </select>
-  <textarea onchange='rooms[${i}].description=this.value'>${r.description||""}</textarea>
-  <button onclick='rooms.splice(${i},1);render()'>Delete</button>
+  <textarea placeholder='Description' onchange='rooms[${i}].description=this.value'>${r.description||""}</textarea>
+  <button class='secondary' onclick='rooms.splice(${i},1);render()'>Delete</button>
   </div>`;
  });
 }
 
 function addRoom(){rooms.push({id:'new-room',title:'New Room',category:'HALLWAY',kind:'hallway-gallery'});render()}
+function resetMovement(){config.movement={...DEFAULT_MOVEMENT};render()}
 
 async function save(){
- await fetch('../api/rooms.php',{
+ const res=await fetch('../api/rooms.php',{
   method:'POST',
   body:JSON.stringify({rooms,config})
- });
- alert('Saved');
+ }).then(r=>r.json());
+ alert(res.success?'Saved':'Save failed');
 }
 
 load();
