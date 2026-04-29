@@ -11,7 +11,11 @@
     "playerRadius": 0.45,
     "mainSpawnX": 0,
     "mainSpawnZ": 18.6,
+    "mainSpawnYaw": 180,
+    "hallwaySpawnYaw": 0,
+    "glassSpawnYaw": 180,
     "barSpawnX": 0,
-    "barSpawnZ": 9.2
+    "barSpawnZ": 9.2,
+    "barSpawnYaw": 0
   }
 }
