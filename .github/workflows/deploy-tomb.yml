@@ -22,7 +22,7 @@ jobs:
           username: robin@faceofrobin.com
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./
-          server-dir: /public_html/tomb/
+          server-dir: /tomb/
           exclude: |
             **/.git*
             **/.git*/**
