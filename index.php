@@ -188,6 +188,11 @@ usort($directoryItems, function($a, $b) {
     return strcasecmp($a['kind'], $b['kind']);
 });
 
+$roomShortcuts = array_values(array_filter($directoryItems, function($entry) {
+    return ($entry['kind'] ?? '') === 'Enterable Room';
+}));
+$roomCount = max(1, count($roomShortcuts));
+
 $punchJson = json_encode($punchData['items'], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 ?>
 <!DOCTYPE html>
@@ -202,12 +207,14 @@ $punchJson = json_encode($punchData['items'], JSON_UNESCAPED_SLASHES | JSON_HEX_
     html,body{margin:0;min-height:100%;background:#050505;color:#fff;font-family:Arial,Helvetica,sans-serif}
     body{background:radial-gradient(circle at 50% 0%,rgba(92,70,31,.34),transparent 36rem),radial-gradient(circle at 20% 18%,rgba(183,143,50,.14),transparent 24rem),linear-gradient(180deg,#070605,#020202 62%,#000);padding:16px}
     a{color:inherit;text-decoration:none}.shell{max-width:1320px;margin:0 auto;display:grid;gap:14px}.hero,.panel{background:var(--panel);border:1px solid var(--line);box-shadow:0 0 42px rgba(0,0,0,.45);backdrop-filter:blur(4px)}
-    .hero{padding:20px;display:grid;grid-template-columns:1.4fr .6fr;gap:18px;align-items:end}h1{margin:0 0 8px;font-size:clamp(26px,5vw,54px);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);line-height:.95}.subtitle{max-width:760px;color:rgba(255,255,255,.82);line-height:1.45;margin:0}.seal{justify-self:end;width:min(150px,34vw);aspect-ratio:1;border-radius:50%;border:1px solid rgba(231,210,154,.5);display:grid;place-items:center;color:var(--gold);font-weight:bold;letter-spacing:.12em;background:radial-gradient(circle,rgba(231,210,154,.12),rgba(0,0,0,.7));box-shadow:inset 0 0 32px rgba(231,210,154,.08),0 0 36px rgba(0,0,0,.5)}
+    .hero{padding:20px;display:grid;grid-template-columns:1.12fr .88fr;gap:18px;align-items:center;min-height:310px}h1{margin:0 0 8px;font-size:clamp(26px,5vw,54px);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);line-height:.95}.subtitle{max-width:760px;color:rgba(255,255,255,.82);line-height:1.45;margin:0}.seal{position:absolute;left:50%;top:50%;translate:-50% -50%;width:min(154px,34vw);aspect-ratio:1;border-radius:50%;border:1px solid rgba(231,210,154,.5);display:grid;place-items:center;color:var(--gold);font-weight:bold;letter-spacing:.12em;text-align:center;background:radial-gradient(circle,rgba(231,210,154,.12),rgba(0,0,0,.7));box-shadow:inset 0 0 32px rgba(231,210,154,.08),0 0 36px rgba(0,0,0,.5);z-index:2}
     .nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.button,button{border:1px solid rgba(231,210,154,.38);background:rgba(218,184,92,.12);color:#f1dfae;padding:9px 11px;text-transform:uppercase;letter-spacing:.12em;font-size:11px;cursor:pointer}.button:hover,button:hover{background:rgba(218,184,92,.22)}
+    .mapWrap{justify-self:end;position:relative;width:min(430px,100%);aspect-ratio:1;min-height:280px;display:grid;place-items:center}.orbit{position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(231,210,154,.2);background:radial-gradient(circle,rgba(231,210,154,.08),transparent 42%,rgba(0,0,0,.16) 43%,transparent 64%)}.roomShortcut{position:absolute;left:var(--x);top:var(--y);translate:-50% -50%;min-width:92px;max-width:132px;text-align:center;padding:9px 10px;border-radius:999px;border:1px solid rgba(231,210,154,.5);background:rgba(0,0,0,.76);box-shadow:0 0 18px rgba(0,0,0,.7);color:#f1dfae;text-transform:uppercase;letter-spacing:.1em;font-size:10px;font-weight:800;line-height:1.1;transition:transform .16s ease,background .16s ease,border-color .16s ease}.roomShortcut:hover{transform:translateY(-2px);background:rgba(218,184,92,.24);border-color:rgba(231,210,154,.85)}.mapHint{position:absolute;left:50%;bottom:8px;translate:-50% 0;color:var(--muted);font-size:10px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}.noRooms{position:absolute;left:50%;top:78%;translate:-50% -50%;width:min(260px,80%);text-align:center;color:var(--muted);font-size:11px;line-height:1.35;border:1px dashed rgba(218,184,92,.26);padding:10px;background:rgba(0,0,0,.42)}
     .panel{padding:14px}.panel h2{margin:0 0 10px;color:var(--gold);font-size:14px;letter-spacing:.16em;text-transform:uppercase}.punchPanel{display:grid;gap:12px}.punchTop{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,.78fr);gap:12px;align-items:start}.punchForm{display:grid;gap:8px}.row{display:grid;grid-template-columns:1fr auto;gap:8px}.items{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}
     input,textarea{width:100%;background:rgba(0,0,0,.52);border:1px solid rgba(218,184,92,.26);color:#fff;padding:9px;font:inherit;border-radius:0;outline:none}textarea{min-height:66px;resize:vertical}input:focus,textarea:focus{border-color:rgba(231,210,154,.7)}.punch{border:1px solid rgba(218,184,92,.2);background:rgba(0,0,0,.36);padding:9px;display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:start;min-height:76px}.punch.done{border-color:rgba(145,199,136,.35);opacity:.72}.punch.done .punchText{text-decoration:line-through;color:rgba(255,255,255,.62)}.check{width:20px;height:20px;accent-color:var(--gold2);margin-top:2px}.room{display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}.punchText{line-height:1.3;word-break:break-word}.meta{font-size:10px;color:var(--muted);margin-top:5px}.mini{font-size:10px;padding:6px 7px;letter-spacing:.08em}.delete{border-color:rgba(183,90,72,.42);color:#ffc7bd;background:rgba(183,90,72,.10)}.empty{color:var(--muted);border:1px dashed rgba(218,184,92,.25);padding:12px;text-align:center}.status{min-height:16px;color:var(--gold);font-size:12px}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}.card{background:var(--panel2);border:1px solid rgba(218,184,92,.22);min-height:132px;display:flex;flex-direction:column;transition:transform .16s ease,border-color .16s ease,background .16s ease}.card:hover{transform:translateY(-2px);border-color:rgba(231,210,154,.55);background:rgba(24,18,12,.9)}.thumb{height:68px;background:#16120d;border-bottom:1px solid rgba(218,184,92,.18);display:grid;place-items:center;overflow:hidden}.thumb img{width:100%;height:100%;object-fit:cover;display:block}.glyph{color:var(--gold);font-size:22px;opacity:.88;text-align:center;word-break:break-word;padding:8px}.cardBody{padding:8px;display:grid;gap:4px;flex:1}.kind{color:var(--gold);font-size:9px;letter-spacing:.12em;text-transform:uppercase;opacity:.85}.name{font-weight:bold;word-break:break-word;line-height:1.12;font-size:13px}.mtime{font-size:10px;color:var(--muted);margin-top:auto}
-    @media(max-width:860px){.hero,.punchTop{grid-template-columns:1fr}.seal{justify-self:start}.row{grid-template-columns:1fr}.items{grid-template-columns:1fr}.grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}.thumb{height:62px}}
+    @media(max-width:860px){.hero,.punchTop{grid-template-columns:1fr}.mapWrap{justify-self:center;width:min(380px,100%)}.row{grid-template-columns:1fr}.items{grid-template-columns:1fr}.grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}.thumb{height:62px}}
+    @media(max-width:520px){.mapWrap{min-height:250px}.roomShortcut{min-width:78px;max-width:106px;font-size:9px;padding:8px 8px}.seal{width:124px}.mapHint{bottom:0;font-size:9px}}
   </style>
 </head>
 <body>
@@ -223,7 +230,23 @@ $punchJson = json_encode($punchData['items'], JSON_UNESCAPED_SLASHES | JSON_HEX_
           <a class="button" href="images/">Images Crypt</a>
         </div>
       </div>
-      <div class="seal">THE FACE<br>TOMB</div>
+      <div class="mapWrap" aria-label="Fast room test shortcuts">
+        <div class="orbit"></div>
+        <div class="seal">MAIN<br>ROOM</div>
+        <?php if (count($roomShortcuts)): ?>
+          <?php foreach ($roomShortcuts as $index => $room):
+            $angle = -90 + (($index / $roomCount) * 360);
+            $radians = deg2rad($angle);
+            $x = 50 + cos($radians) * 39;
+            $y = 50 + sin($radians) * 39;
+          ?>
+            <a class="roomShortcut" href="<?= $room['href'] ?>" style="--x:<?= round($x, 3) ?>%;--y:<?= round($y, 3) ?>%;"><?= $room['label'] ?></a>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <div class="noRooms">No indexed rooms found yet. Add an index.php or index.html inside a room folder and it will appear here.</div>
+        <?php endif; ?>
+        <div class="mapHint">Shortcut orbit</div>
+      </div>
     </section>
 
     <section class="panel punchPanel">
@@ -270,7 +293,7 @@ $punchJson = json_encode($punchData['items'], JSON_UNESCAPED_SLASHES | JSON_HEX_
     const newText = document.getElementById('newText');
     const newRoom = document.getElementById('newRoom');
 
-    function escapeHtml(value){return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[char]));}
+    function escapeHtml(value){return String(value ?? '').replace(/[&<>'\"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','\"':'&quot;'}[char]));}
     function displayDate(value){const d = new Date(value || Date.now()); return Number.isNaN(d.getTime()) ? 'just now' : d.toLocaleString();}
     function renderPunchList(){
       const sorted = [...punchItems].sort((a,b) => Number(a.done) - Number(b.done));
