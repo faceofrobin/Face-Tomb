@@ -1,22 +1,101 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Face Tomb App</title>
-<style>
-body{margin:0;background:#000;color:#fff;font-family:Arial}
-#info{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.6);padding:10px}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Face Tomb App</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;overflow:hidden;background:#050505;color:#fff;font-family:Arial,Helvetica,sans-serif}
+    #app{position:fixed;inset:0}
+    #hud{position:fixed;top:12px;left:12px;z-index:5;width:min(380px,calc(100vw - 24px));padding:12px 14px;background:rgba(0,0,0,.68);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(4px);font-size:13px;line-height:1.35}
+    #hud h1{margin:0 0 6px;font-size:16px;letter-spacing:.08em}
+    #hud small{display:block;opacity:.78;margin-top:6px}
+    #centerDot{position:fixed;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:rgba(255,255,255,.72);z-index:4;pointer-events:none}
+    #start{position:fixed;inset:0;display:grid;place-items:center;z-index:10;background:radial-gradient(circle,rgba(45,38,26,.5),rgba(0,0,0,.92));cursor:pointer;text-align:center;padding:24px}
+    #start div{max-width:620px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.72);padding:24px}
+    #start h2{margin:0 0 10px;letter-spacing:.12em}
+    #msg{position:fixed;right:12px;bottom:12px;z-index:5;width:min(420px,calc(100vw - 24px));background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.18);padding:10px;font-size:13px;line-height:1.35;min-height:42px}
+    #touch{display:none;position:fixed;inset:auto 0 0 0;z-index:6;pointer-events:none}
+    .pad{position:absolute;bottom:24px;width:178px;height:178px;pointer-events:none}.pad.left{left:18px}.pad.right{right:18px}
+    .btn{position:absolute;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.48);border:1px solid rgba(255,255,255,.24);pointer-events:auto;user-select:none;touch-action:none;font-size:20px}.btn:active{background:rgba(255,255,255,.18)}
+    .up{left:61px;top:0}.down{left:61px;bottom:0}.leftBtn{left:0;top:61px}.rightBtn{right:0;top:61px}
+    @media(pointer:coarse){#touch{display:block}#msg{padding-bottom:84px}#hud{font-size:12px}}
+  </style>
 </head>
 <body>
-<div id="info">Loading Face Tomb...</div>
-<script>
-fetch('../api/scene.php')
-  .then(r=>r.json())
-  .then(data=>{
-    console.log('Scene Data:', data);
-    document.getElementById('info').innerText = 'Loaded scene. Open console.';
-  });
+  <div id="app"></div>
+  <div id="centerDot"></div>
+  <div id="hud"><h1>FACE TOMB</h1><div>WASD move · mouse look · Shift sprint · click art to inspect</div><small id="stats">Loading scene API…</small></div>
+  <div id="msg">The PHP API is now feeding this Three.js room.</div>
+  <div id="start"><div><h2>ENTER THE FACE TOMB</h2><p>Click or tap to begin. This viewer is powered by <code>/api/scene.php</code>.</p></div></div>
+  <div id="touch"><div class="pad left"><div class="btn up" data-k="forward">▲</div><div class="btn down" data-k="back">▼</div><div class="btn leftBtn" data-k="left">◀</div><div class="btn rightBtn" data-k="right">▶</div></div><div class="pad right"><div class="btn up" data-k="lookUp">▲</div><div class="btn down" data-k="lookDown">▼</div><div class="btn leftBtn" data-k="lookLeft">◀</div><div class="btn rightBtn" data-k="lookRight">▶</div></div></div>
+
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.161.0/build/three.module.js';
+
+const app=document.getElementById('app'), msg=document.getElementById('msg'), stats=document.getElementById('stats'), start=document.getElementById('start');
+const state={forward:false,back:false,left:false,right:false,lookUp:false,lookDown:false,lookLeft:false,lookRight:false,sprint:false,yaw:Math.PI,pitch:0,ready:false};
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x070605);scene.fog=new THREE.FogExp2(0x070605,.018);
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,500);camera.position.set(0,1.65,16);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);app.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xe6d2a2,0x14100b,.8));
+const sun=new THREE.DirectionalLight(0xffe2a8,1.1);sun.position.set(8,12,6);scene.add(sun);
+const textureLoader=new THREE.TextureLoader();
+const colliders=[];const clickable=[];const clock=new THREE.Clock();
+function mat(color,rough=.9){return new THREE.MeshStandardMaterial({color,roughness:rough});}
+const floorMat=mat(0x3b3328), wallMat=mat(0x76664f), ceilingMat=mat(0x24211d), frameMat=mat(0x18120c), goldMat=mat(0xb78f32,.55);
+function addBox(x,y,z,w,h,d,m){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);mesh.position.set(x,y,z);scene.add(mesh);colliders.push({x,z,w,d});return mesh;}
+function buildShell(){
+  const W=22,L=42,H=5;
+  addBox(0,-.06,0,W,.12,L,floorMat);addBox(0,H+.04,0,W,.12,L,ceilingMat);
+  addBox(-W/2,H/2,0,.35,H,L,wallMat);addBox(W/2,H/2,0,.35,H,L,wallMat);addBox(0,H/2,-L/2,W,H,.35,wallMat);addBox(0,H/2,L/2,W,H,.35,wallMat);
+  for(let z=-14;z<=14;z+=7){
+    const torch=new THREE.PointLight(0xffb35c,1.1,12,2);torch.position.set(-9.7,2.6,z);scene.add(torch);
+    const torch2=torch.clone();torch2.position.x=9.7;scene.add(torch2);
+  }
+  const altar=new THREE.Mesh(new THREE.BoxGeometry(4,1.1,2.2),goldMat);altar.position.set(0,.55,-16);scene.add(altar);colliders.push({x:0,z:-16,w:4,d:2.2});
+}
+function placeMedia(items){
+  const images=items.filter(i=>i.type==='image').slice(0,24);let n=0;
+  const rows=[-15,-10,-5,0,5,10,15];
+  for(const z of rows){for(const side of [-1,1]){if(!images[n])return;addArt(images[n++],side*10.76,2.45,z,side<0?Math.PI/2:-Math.PI/2);}}
+  for(let x=-6;x<=6;x+=6){if(images[n])addArt(images[n++],x,2.45,-20.76,0);}
+}
+function addArt(item,x,y,z,rotY){
+  const group=new THREE.Group();group.position.set(x,y,z);group.rotation.y=rotY;scene.add(group);
+  const frame=new THREE.Mesh(new THREE.BoxGeometry(2.45,2.85,.12),frameMat);frame.position.z=.02;group.add(frame);
+  const pane=new THREE.Mesh(new THREE.PlaneGeometry(2.05,2.45),new THREE.MeshBasicMaterial({color:0x222222}));pane.position.z=-.05;group.add(pane);
+  textureLoader.load(item.url,tex=>{tex.colorSpace=THREE.SRGBColorSpace;pane.material=new THREE.MeshBasicMaterial({map:tex});pane.userData.item=item;},undefined,()=>{pane.material.color.set(0x553333);});
+  clickable.push(pane);pane.userData.item=item;
+}
+function collisionMove(pos,next){
+  const radius=.45;for(const c of colliders){if(Math.abs(next.x-c.x)<c.w/2+radius && Math.abs(next.z-c.z)<c.d/2+radius)return pos;}return next;
+}
+function updateCamera(dt){
+  const lookSpeed=1.6;if(state.lookLeft)state.yaw+=lookSpeed*dt;if(state.lookRight)state.yaw-=lookSpeed*dt;if(state.lookUp)state.pitch+=lookSpeed*dt;if(state.lookDown)state.pitch-=lookSpeed*dt;
+  state.pitch=Math.max(-1.2,Math.min(1.2,state.pitch));camera.rotation.order='YXZ';camera.rotation.y=state.yaw;camera.rotation.x=state.pitch;
+  const dir=new THREE.Vector3();const side=new THREE.Vector3();camera.getWorldDirection(dir);dir.y=0;dir.normalize();side.crossVectors(dir,new THREE.Vector3(0,1,0)).normalize();
+  let move=new THREE.Vector3();if(state.forward)move.add(dir);if(state.back)move.sub(dir);if(state.left)move.add(side);if(state.right)move.sub(side);if(move.lengthSq()>0)move.normalize();
+  const speed=(state.sprint?8.5:4.8)*dt;const next=camera.position.clone().addScaledVector(move,speed);next.y=1.65;camera.position.copy(collisionMove(camera.position,next));
+}
+function rayInspect(){const ray=new THREE.Raycaster();ray.setFromCamera(new THREE.Vector2(0,0),camera);const hit=ray.intersectObjects(clickable,true)[0];if(hit?.object?.userData?.item){const it=hit.object.userData.item;msg.textContent=`${it.category}: ${it.filename}`;}}
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);updateCamera(dt);renderer.render(scene,camera);} 
+function bind(){
+  addEventListener('keydown',e=>{if(e.code==='KeyW')state.forward=true;if(e.code==='KeyS')state.back=true;if(e.code==='KeyA')state.left=true;if(e.code==='KeyD')state.right=true;if(e.code==='ShiftLeft')state.sprint=true;});
+  addEventListener('keyup',e=>{if(e.code==='KeyW')state.forward=false;if(e.code==='KeyS')state.back=false;if(e.code==='KeyA')state.left=false;if(e.code==='KeyD')state.right=false;if(e.code==='ShiftLeft')state.sprint=false;});
+  document.addEventListener('mousemove',e=>{if(document.pointerLockElement===renderer.domElement){state.yaw-=e.movementX*.0022;state.pitch-=e.movementY*.0022;}});
+  renderer.domElement.addEventListener('click',()=>{rayInspect();renderer.domElement.requestPointerLock?.();});start.addEventListener('click',()=>{start.style.display='none';renderer.domElement.requestPointerLock?.();});
+  document.querySelectorAll('[data-k]').forEach(b=>{const k=b.dataset.k;const on=e=>{e.preventDefault();state[k]=true};const off=e=>{e.preventDefault();state[k]=false};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off);});
+  addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+}
+async function init(){
+  bind();buildShell();
+  try{const data=await fetch('../api/scene.php').then(r=>r.json());const all=[...(data.media?.GLASS||[]),...(data.media?.HALLWAY||[]),...(data.media?.ART||[])];placeMedia(all);stats.textContent=`API loaded: ${all.length} media files. ${all.slice(0,24).length} placed in the tomb.`;msg.textContent='Scene API loaded. The room is now data-fed instead of PHP-rendered.';}
+  catch(err){console.error(err);stats.textContent='API failed; showing empty tomb shell.';msg.textContent='Could not load ../api/scene.php. The shell still works.';}
+  animate();
+}
+init();
 </script>
 </body>
 </html>
