@@ -1,7 +1,18 @@
 <?php
 $html = file_get_contents(__DIR__ . '/index.html');
 
-// --- NEW FLOORPLAN ROOM INJECTION ---
+// Restore fade.jpeg as a curved medallion in the main dome.
+$baseDome = <<<'JS'
+const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);
+JS;
+
+$domeFace = <<<'JS'
+const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);function curvedFadeDisk(radius=10.8,sag=.82,rings=28,segs=128){const pos=[],uv=[],idx=[];for(let r=0;r<=rings;r++){const rn=r/rings,rr=radius*rn,y=sag*(1-rn*rn);for(let s=0;s<=segs;s++){const a=s/segs*Math.PI*2,x=Math.cos(a)*rr,z=Math.sin(a)*rr;pos.push(x,y,z);uv.push(.5+x/(radius*2),.5-z/(radius*2))}}for(let r=0;r<rings;r++){for(let s=0;s<segs;s++){const a=r*(segs+1)+s,b=a+segs+1;idx.push(a,b,a+1,b,b+1,a+1)}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();return g}const fadeTex=tex('./images/fade.jpeg');fadeTex.center.set(.5,.5);fadeTex.colorSpace=THREE.SRGBColorSpace;const fadeCap=new THREE.Mesh(curvedFadeDisk(10.8,.82,28,128),new THREE.MeshBasicMaterial({map:fadeTex,side:THREE.DoubleSide,transparent:false,depthWrite:true}));fadeCap.position.y=8.62;root.add(fadeCap);const fadeGlow=new THREE.PointLight(0xffe7b0,1.65,24,2);fadeGlow.position.set(0,8.25,0);addLight(fadeGlow);const fadeRing=new THREE.Mesh(new THREE.TorusGeometry(10.8,.15,12,180),mats.gold);fadeRing.rotation.x=-Math.PI/2;fadeRing.position.set(0,8.62,0);root.add(fadeRing);
+JS;
+
+$html = str_replace($baseDome, $domeFace, $html);
+
+// --- FLOORPLAN ROOM INJECTION ---
 $floorplanJs = <<<'JS'
 function buildFloorplan(room){
   reset();
@@ -54,6 +65,11 @@ function buildFloorplan(room){
   box(0,H/2,-10,20,H,T,mats.wall);
   box(0,H/2,10,20,H,T,mats.wall);
 
+  // temporary connector so the guessed procedural version is no longer separated
+  box(-15,0,0,10,0.1,4,mats.floor,false);
+  box(-15,H/2,-2,10,H,T,mats.wall);
+  box(-15,H/2,2,10,H,T,mats.wall);
+
   for(let x=-6;x<=6;x+=4){
     for(let z=-6;z<=6;z+=4){
       box(x,1.5,z,1.2,3,1.2,mats.stone,true);
@@ -73,10 +89,7 @@ function buildFloorplan(room){
         box(ax + side*AW/2, H/2, z, T, H, AD, mats.wall);
         box(ax, H/2, z-AD/2, AW, H, T, mats.wall);
 
-        const panel = new THREE.Mesh(
-          new THREE.PlaneGeometry(c.artPanelWidth||2, c.artPanelHeight||2.5),
-          mats.glow
-        );
+        const panel = new THREE.Mesh(new THREE.PlaneGeometry(c.artPanelWidth||2, c.artPanelHeight||2.5), mats.glow);
         panel.position.set(ax,2.5,z-AD/2+.22);
         root.add(panel);
       });
@@ -91,14 +104,13 @@ function buildFloorplan(room){
   clickObj(ret,'Return','Back to main',buildMain);
   animated.push({object:ret,speed:.8});
 
-  stats.textContent = `${room.title} · procedural floorplan · alcoves ready`;
-  msg.textContent = 'Exact floorplan recreation loaded.';
+  stats.textContent = `${room.title} · floorplan renderer`;
+  msg.textContent = 'Floorplan loaded. SVG importer is next; dome Face is restored.';
 }
 JS;
 
 $html = str_replace("function loadRoom(id){", $floorplanJs . "\nfunction loadRoom(id){", $html);
 
-// Robustly route both floorplan-gallery and floorplan gallery to the renderer.
 $html = preg_replace(
   "/else\s+msg\.textContent='No renderer for '\+r\.kind\}/",
   "else if(r.kind==='floorplan-gallery'||r.kind==='floorplan gallery')buildFloorplan(r);else msg.textContent='No renderer for '+r.kind}",
