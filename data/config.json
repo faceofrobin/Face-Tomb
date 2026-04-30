@@ -1,5 +1,6 @@
 {
   "movement": {
+    "cameraFov": 75,
     "walkSpeed": 4.8,
     "runSpeed": 8.5,
     "mouseLookSensitivity": 0.0022,
