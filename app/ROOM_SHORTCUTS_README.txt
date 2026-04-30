@@ -1,1 +1,0 @@
-Room shortcuts patch target placeholder.
