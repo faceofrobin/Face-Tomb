@@ -64,5 +64,24 @@
       "glassZ": 2.65,
       "musicVolume": 0.14
     }
+  },
+  {
+    "id": "floorplan",
+    "title": "The Alcove Plan",
+    "category": "FLOORPLAN",
+    "kind": "floorplan-gallery",
+    "relic": "trapezoid tablet",
+    "description": "A procedural, exact-first recreation of the uploaded floorplan: trapezoid spawn room, central grid hall, long vertical galleries, and many small alcove rooms ready for artwork.",
+    "spawn": { "x": -26, "y": 1.65, "z": -2.5 },
+    "config": {
+      "scale": 1,
+      "wallHeight": 5.8,
+      "wallThickness": 0.38,
+      "corridorWidth": 4,
+      "alcoveDepth": 4.8,
+      "alcoveWidth": 4.2,
+      "artPanelWidth": 2.2,
+      "artPanelHeight": 2.8
+    }
   }
 ]
