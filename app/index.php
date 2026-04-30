@@ -21,12 +21,18 @@ const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math
 JS;
 
 $newMainDome = <<<'JS'
-const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);const fadeTex=tex('./images/fade.jpeg');fadeTex.center.set(.5,.5);fadeTex.colorSpace=THREE.SRGBColorSpace;const fadeCap=new THREE.Mesh(new THREE.SphereGeometry(9.2,96,32,0,Math.PI*2,0,Math.PI*.47),new THREE.MeshBasicMaterial({map:fadeTex,side:THREE.BackSide,transparent:false}));fadeCap.scale.y=.34;fadeCap.position.y=10.63;fadeCap.rotation.y=Math.PI;root.add(fadeCap);const fadeGlow=new THREE.PointLight(0xffe7b0,1.15,18,2);fadeGlow.position.set(0,9.7,0);addLight(fadeGlow);const fadeRing=new THREE.Mesh(new THREE.TorusGeometry(8.35,.13,12,160),mats.gold);fadeRing.rotation.x=-Math.PI/2;fadeRing.position.set(0,9.59,0);root.add(fadeRing);
+const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);const fadeTex=tex('./images/fade.jpeg');fadeTex.center.set(.5,.5);fadeTex.colorSpace=THREE.SRGBColorSpace;const fadeCap=new THREE.Mesh(new THREE.SphereGeometry(13.2,96,28,0,Math.PI*2,0,Math.PI*.34),new THREE.MeshBasicMaterial({map:fadeTex,side:THREE.BackSide,transparent:false}));fadeCap.scale.y=.22;fadeCap.position.y=9.58;fadeCap.rotation.y=Math.PI;root.add(fadeCap);const fadeGlow=new THREE.PointLight(0xffe7b0,1.35,22,2);fadeGlow.position.set(0,8.6,0);addLight(fadeGlow);const fadeRing=new THREE.Mesh(new THREE.TorusGeometry(9.75,.14,12,160),mats.gold);fadeRing.rotation.x=-Math.PI/2;fadeRing.position.set(0,8.84,0);root.add(fadeRing);
 JS;
 
 $html = str_replace($oldMainDome, $newMainDome, $html);
 
-// replace the previous flat medallion patch if it has already been injected
+// replace the previous curved and flat medallion patches if they have already been injected
+$oldCurvedMainDome = <<<'JS'
+const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);const fadeTex=tex('./images/fade.jpeg');fadeTex.center.set(.5,.5);fadeTex.colorSpace=THREE.SRGBColorSpace;const fadeCap=new THREE.Mesh(new THREE.SphereGeometry(9.2,96,32,0,Math.PI*2,0,Math.PI*.47),new THREE.MeshBasicMaterial({map:fadeTex,side:THREE.BackSide,transparent:false}));fadeCap.scale.y=.34;fadeCap.position.y=10.63;fadeCap.rotation.y=Math.PI;root.add(fadeCap);const fadeGlow=new THREE.PointLight(0xffe7b0,1.15,18,2);fadeGlow.position.set(0,9.7,0);addLight(fadeGlow);const fadeRing=new THREE.Mesh(new THREE.TorusGeometry(8.35,.13,12,160),mats.gold);fadeRing.rotation.x=-Math.PI/2;fadeRing.position.set(0,9.59,0);root.add(fadeRing);
+JS;
+
+$html = str_replace($oldCurvedMainDome, $newMainDome, $html);
+
 $oldFlatMainDome = <<<'JS'
 const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);const fadeTex=tex('./images/fade.jpeg');fadeTex.center.set(.5,.5);const fadeMedallion=new THREE.Mesh(new THREE.CircleGeometry(7.25,96),new THREE.MeshBasicMaterial({map:fadeTex,side:THREE.DoubleSide}));fadeMedallion.rotation.x=-Math.PI/2;fadeMedallion.position.set(0,10.82,0);root.add(fadeMedallion);const fadeRing=new THREE.Mesh(new THREE.TorusGeometry(7.32,.12,12,128),mats.gold);fadeRing.rotation.x=-Math.PI/2;fadeRing.position.set(0,10.815,0);root.add(fadeRing);
 JS;
