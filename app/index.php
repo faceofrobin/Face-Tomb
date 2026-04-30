@@ -1,73 +1,115 @@
 <?php
 $html = file_get_contents(__DIR__ . '/index.html');
 
-// inject UI container after tools
-$html = str_replace('</div>\n<div id="mobileControls"', "</div>\n<div id=\"roomQuick\" style=\"position:fixed;top:60px;right:12px;z-index:7;display:flex;flex-direction:column;gap:6px;max-width:160px\"></div>\n<div id=\"mobileControls\"", $html);
+// --- NEW FLOORPLAN ROOM INJECTION ---
+$floorplanJs = <<<'JS'
+function buildFloorplan(room){
+  reset();
+  state.room='floorplan';
 
-// make the glass chapel obey the big tower config instead of hard-coded 12-unit walls
-$oldGlass = <<<'JS'
-function buildGlass(room){reset();state.room='glass';const c=room.config||{},towerRadius=c.towerRadius||10,roomScale=c.roomScale||2,roomHalf=towerRadius*roomScale,sides=c.sides||12,layers=c.layers||7,panelW=c.panelWidth||5.2,panelH=c.panelHeight||4.2,gap=c.verticalGap||3.8,baseY=c.baseAtEyeLevel?BASE_EYE:0;scene.background=new THREE.Color(0xf7f5ef);scene.fog=new THREE.FogExp2(0xf7f5ef,.006);setSpawn(room.spawn?.x??0,room.spawn?.z??roomHalf+2,cfg('glassSpawnYaw'));const media=(sceneData.media?.[room.category]||[]).filter(i=>i.type==='image');box(0,-.06,0,roomHalf*2,.12,roomHalf*2,new THREE.MeshStandardMaterial({color:0xfaf8ee,roughness:.78}),false);box(0,6,-roomHalf,roomHalf*2,12,.28,mats.white,true);box(0,6,roomHalf,roomHalf*2,12,.28,mats.white,true);box(-roomHalf,6,0,.28,12,roomHalf*2,mats.white,true);box(roomHalf,6,0,.28,12,roomHalf*2,mats.white,true);box(0,12,0,roomHalf*2,.2,roomHalf*2,new THREE.MeshStandardMaterial({color:0xffffff,roughness:.9}),false);const apse=new THREE.Mesh(new THREE.SphereGeometry(roomHalf,48,16,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.88,side:THREE.BackSide}));apse.scale.y=.28;apse.position.y=11.9;root.add(apse);const tower=new THREE.Group();root.add(tower);for(let layer=0;layer<layers;layer++){for(let i=0;i<sides;i++){const a=i*Math.PI*2/sides,x=Math.sin(a)*towerRadius,z=Math.cos(a)*towerRadius,item=media[(i+layer*sides)%Math.max(media.length,1)];const material=item?new THREE.MeshBasicMaterial({map:tex(item.url),side:THREE.DoubleSide}):mats.glass;const p=new THREE.Mesh(new THREE.PlaneGeometry(panelW,panelH),material);p.position.set(x,baseY+layer*gap,z);p.rotation.y=a;tower.add(p);addPanelFrame(tower,x,baseY+layer*gap,z,a,panelW,panelH)}}animated.push({object:tower,speed:c.spinSpeed||.055});addLight(new THREE.HemisphereLight(0xffffff,0xbfdfff,1.35));addLight(new THREE.PointLight(0xffffff,4.2,roomHalf*3,1.4)).position.set(0,8,0);addLight(new THREE.PointLight(0x9edbff,2.4,roomHalf*2,2)).position.set(0,baseY+layers*gap*.55,0);if(room.audio)playRoomAudio(room.audio,.14);const ret=new THREE.Mesh(new THREE.OctahedronGeometry(.9,0),mats.glow);ret.position.set(0,1.5,roomHalf-3);root.add(ret);clickObj(ret,'Return Relic','Back to the main chamber.',buildMain);animated.push({object:ret,speed:.8});stats.textContent=`${room.title} · ${media.length} glass images`;msg.textContent=media.length?`The Glass Chapel is open with ${media.length} images on the tower.`:'The Glass Chapel is open, but no GLASS images were found.'}
-JS;
+  const c = room.config||{};
+  const H = c.wallHeight||6;
+  const T = c.wallThickness||0.4;
+  const CW = c.corridorWidth||4;
+  const AW = c.alcoveWidth||4.2;
+  const AD = c.alcoveDepth||4.8;
 
-$newGlass = <<<'JS'
-function buildGlass(room){reset();state.room='glass';const c=room.config||{},towerRadius=c.towerRadius||12,roomScale=c.roomScale||2.35,roomHalf=towerRadius*roomScale,sides=c.sides||12,layers=c.layers||3,panelW=c.panelWidth||3.2,panelH=c.panelHeight||8,gap=c.verticalGap||8.15,baseY=c.baseAtEyeLevel?BASE_EYE:0,wallH=c.wallHeight||30,roofClearance=c.roofClearance||5.7,roofY=wallH+roofClearance;scene.background=new THREE.Color(0xf7f5ef);scene.fog=new THREE.FogExp2(0xf7f5ef,.0045);setSpawn(room.spawn?.x??0,room.spawn?.z??roomHalf-1,cfg('glassSpawnYaw'));const media=(sceneData.media?.[room.category]||[]).filter(i=>i.type==='image');box(0,-.06,0,roomHalf*2,.12,roomHalf*2,new THREE.MeshStandardMaterial({color:0xfaf8ee,roughness:.78}),false);box(0,wallH/2,-roomHalf,roomHalf*2,wallH,.28,mats.white,true);box(0,wallH/2,roomHalf,roomHalf*2,wallH,.28,mats.white,true);box(-roomHalf,wallH/2,0,.28,wallH,roomHalf*2,mats.white,true);box(roomHalf,wallH/2,0,.28,wallH,roomHalf*2,mats.white,true);box(0,roofY,0,roomHalf*2,.24,roomHalf*2,new THREE.MeshStandardMaterial({color:0xffffff,roughness:.9}),false);const apse=new THREE.Mesh(new THREE.SphereGeometry(roomHalf,64,18,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.88,side:THREE.BackSide}));apse.scale.y=.32;apse.position.y=roofY-.1;root.add(apse);const tower=new THREE.Group();root.add(tower);for(let layer=0;layer<layers;layer++){for(let i=0;i<sides;i++){const a=i*Math.PI*2/sides,x=Math.sin(a)*towerRadius,z=Math.cos(a)*towerRadius,y=baseY+layer*gap,item=media[(i+layer*sides)%Math.max(media.length,1)];const material=item?new THREE.MeshBasicMaterial({map:tex(item.url),side:THREE.DoubleSide}):mats.glass;const p=new THREE.Mesh(new THREE.PlaneGeometry(panelW,panelH),material);p.position.set(x,y,z);p.rotation.y=a;tower.add(p);addPanelFrame(tower,x,y,z,a,panelW,panelH)}}animated.push({object:tower,speed:c.spinSpeed||.04});addLight(new THREE.HemisphereLight(0xffffff,0xbfdfff,1.55));addLight(new THREE.PointLight(0xffffff,5.2,roomHalf*3.2,1.25)).position.set(0,wallH*.55,0);addLight(new THREE.PointLight(0x9edbff,3.1,roomHalf*2.4,1.7)).position.set(0,baseY+layers*gap*.5,0);if(room.audio)playRoomAudio(room.audio,.14);const ret=new THREE.Mesh(new THREE.OctahedronGeometry(.9,0),mats.glow);ret.position.set(0,1.5,roomHalf-3);root.add(ret);clickObj(ret,'Return Relic','Back to the main chamber.',buildMain);animated.push({object:ret,speed:.8});stats.textContent=`${room.title} · ${media.length} huge glass images · roof ${roofY.toFixed(1)}`;msg.textContent=media.length?`The Glass Chapel is huge: ${layers} tall rings under a raised roof.`:'The Glass Chapel is huge, but no GLASS images were found.'}
-JS;
+  scene.background = new THREE.Color(0x060606);
+  scene.fog = new THREE.FogExp2(0x060606, .012);
 
-$html = str_replace($oldGlass, $newGlass, $html);
+  setSpawn(room.spawn?.x??-24, room.spawn?.z??0, 90);
 
-// add fade.jpeg as a custom UV-mapped curved disk inside the main dome
-$oldMainDome = <<<'JS'
-const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);
-JS;
+  // --- TRAPEZOID SPAWN ROOM ---
+  const trap = new THREE.Shape();
+  trap.moveTo(-6,-4);
+  trap.lineTo(6,-4);
+  trap.lineTo(4,4);
+  trap.lineTo(-6,4);
+  trap.closePath();
 
-$newMainDome = <<<'JS'
-const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);function curvedFadeDisk(radius=10.8,sag=.82,rings=28,segs=128){const pos=[],uv=[],idx=[];for(let r=0;r<=rings;r++){const rn=r/rings,rr=radius*rn,y=sag*(1-rn*rn);for(let s=0;s<=segs;s++){const a=s/segs*Math.PI*2,x=Math.cos(a)*rr,z=Math.sin(a)*rr;pos.push(x,y,z);uv.push(.5+x/(radius*2),.5-z/(radius*2))}}for(let r=0;r<rings;r++){for(let s=0;s<segs;s++){const a=r*(segs+1)+s,b=a+segs+1;idx.push(a,b,a+1,b,b+1,a+1)}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();return g}const fadeTex=tex('./images/fade.jpeg');fadeTex.center.set(.5,.5);fadeTex.colorSpace=THREE.SRGBColorSpace;const fadeCap=new THREE.Mesh(curvedFadeDisk(10.8,.82,28,128),new THREE.MeshBasicMaterial({map:fadeTex,side:THREE.DoubleSide,transparent:false,depthWrite:true}));fadeCap.position.y=8.62;root.add(fadeCap);const fadeGlow=new THREE.PointLight(0xffe7b0,1.65,24,2);fadeGlow.position.set(0,8.25,0);addLight(fadeGlow);const fadeRing=new THREE.Mesh(new THREE.TorusGeometry(10.8,.15,12,180),mats.gold);fadeRing.rotation.x=-Math.PI/2;fadeRing.position.set(0,8.62,0);root.add(fadeRing);
-JS;
+  const floorGeo = new THREE.ShapeGeometry(trap);
+  const floor = new THREE.Mesh(floorGeo, mats.floor);
+  floor.rotation.x = -Math.PI/2;
+  floor.position.set(-24,0,0);
+  root.add(floor);
 
-$html = str_replace($oldMainDome, $newMainDome, $html);
+  // walls around trapezoid
+  function wallLine(x1,z1,x2,z2){
+    const len = Math.hypot(x2-x1,z2-z1);
+    const midX=(x1+x2)/2, midZ=(z1+z2)/2;
+    const angle=Math.atan2(z2-z1,x2-x1);
+    const w = new THREE.Mesh(new THREE.BoxGeometry(len,H,T), mats.wall);
+    w.position.set(midX-24,H/2,midZ);
+    w.rotation.y = -angle;
+    root.add(w);
+  }
 
-// replace the previous curved and flat medallion patches if they have already been injected
-$oldCurvedMainDome = <<<'JS'
-const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);const fadeTex=tex('./images/fade.jpeg');fadeTex.center.set(.5,.5);fadeTex.colorSpace=THREE.SRGBColorSpace;const fadeCap=new THREE.Mesh(new THREE.SphereGeometry(13.2,96,28,0,Math.PI*2,0,Math.PI*.34),new THREE.MeshBasicMaterial({map:fadeTex,side:THREE.BackSide,transparent:false}));fadeCap.scale.y=.22;fadeCap.position.y=9.58;fadeCap.rotation.y=Math.PI;root.add(fadeCap);const fadeGlow=new THREE.PointLight(0xffe7b0,1.35,22,2);fadeGlow.position.set(0,8.6,0);addLight(fadeGlow);const fadeRing=new THREE.Mesh(new THREE.TorusGeometry(9.75,.14,12,160),mats.gold);fadeRing.rotation.x=-Math.PI/2;fadeRing.position.set(0,8.84,0);root.add(fadeRing);
-JS;
+  wallLine(-6,-4,6,-4);
+  wallLine(6,-4,4,4);
+  wallLine(4,4,-6,4);
+  wallLine(-6,4,-6,-4);
 
-$html = str_replace($oldCurvedMainDome, $newMainDome, $html);
+  // --- MAIN CENTRAL GRID ROOM ---
+  box(0,0,0,20,0.1,20,mats.floor,false);
+  box(-10,H/2,0,T,H,20,mats.wall);
+  box(10,H/2,0,T,H,20,mats.wall);
+  box(0,H/2,-10,20,H,T,mats.wall);
+  box(0,H/2,10,20,H,T,mats.wall);
 
-$oldCurvedMainDome2 = <<<'JS'
-const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);const fadeTex=tex('./images/fade.jpeg');fadeTex.center.set(.5,.5);fadeTex.colorSpace=THREE.SRGBColorSpace;const fadeCap=new THREE.Mesh(new THREE.SphereGeometry(9.2,96,32,0,Math.PI*2,0,Math.PI*.47),new THREE.MeshBasicMaterial({map:fadeTex,side:THREE.BackSide,transparent:false}));fadeCap.scale.y=.34;fadeCap.position.y=10.63;fadeCap.rotation.y=Math.PI;root.add(fadeCap);const fadeGlow=new THREE.PointLight(0xffe7b0,1.15,18,2);fadeGlow.position.set(0,9.7,0);addLight(fadeGlow);const fadeRing=new THREE.Mesh(new THREE.TorusGeometry(8.35,.13,12,160),mats.gold);fadeRing.rotation.x=-Math.PI/2;fadeRing.position.set(0,9.59,0);root.add(fadeRing);
-JS;
+  // grid pillars (visual reference to plan)
+  for(let x=-6;x<=6;x+=4){
+    for(let z=-6;z<=6;z+=4){
+      box(x,1.5,z,1.2,3,1.2,mats.stone,true);
+    }
+  }
 
-$html = str_replace($oldCurvedMainDome2, $newMainDome, $html);
+  // --- VERTICAL CORRIDOR WITH ALCOVES ---
+  function buildCorridor(startZ,count){
+    for(let i=0;i<count;i++){
+      const z = startZ - i*8;
+      // corridor floor
+      box(0,0,z, CW, 0.1, 8, mats.floor,false);
 
-$oldFlatMainDome = <<<'JS'
-const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);const fadeTex=tex('./images/fade.jpeg');fadeTex.center.set(.5,.5);const fadeMedallion=new THREE.Mesh(new THREE.CircleGeometry(7.25,96),new THREE.MeshBasicMaterial({map:fadeTex,side:THREE.DoubleSide}));fadeMedallion.rotation.x=-Math.PI/2;fadeMedallion.position.set(0,10.82,0);root.add(fadeMedallion);const fadeRing=new THREE.Mesh(new THREE.TorusGeometry(7.32,.12,12,128),mats.gold);fadeRing.rotation.x=-Math.PI/2;fadeRing.position.set(0,10.815,0);root.add(fadeRing);
-JS;
+      // walls
+      box(-CW/2, H/2, z, T, H, 8, mats.wall);
+      box(CW/2, H/2, z, T, H, 8, mats.wall);
 
-$html = str_replace($oldFlatMainDome, $newMainDome, $html);
+      // alcoves left/right
+      const offsets=[-1,1];
+      offsets.forEach(side=>{
+        const ax = side*(CW/2 + AW/2);
+        box(ax,0,z,AW,0.1,AD,mats.floor,false);
+        box(ax - side*AW/2, H/2, z, T, H, AD, mats.wall);
+        box(ax + side*AW/2, H/2, z, T, H, AD, mats.wall);
+        box(ax, H/2, z-AD/2, AW, H, T, mats.wall);
 
-// inject JS into module before init()
-$inject = <<<JS
-const roomQuick = document.getElementById('roomQuick');
+        // placeholder art panel
+        const panel = new THREE.Mesh(
+          new THREE.PlaneGeometry(c.artPanelWidth||2, c.artPanelHeight||2.5),
+          mats.glow
+        );
+        panel.position.set(ax,2.5,z-AD/2+.2);
+        root.add(panel);
+      });
+    }
+  }
 
-function buildRoomShortcuts(){
-  if(!roomQuick) return;
-  roomQuick.innerHTML='';
-  (sceneData.rooms||[]).forEach(r=>{
-    const b=document.createElement('button');
-    b.className='pill';
-    b.textContent=(r.title||r.id);
-    b.onclick=(e)=>{ e.stopPropagation(); loadRoom(r.id); };
-    roomQuick.appendChild(b);
-  });
+  buildCorridor(-12,10);
+
+  // --- RETURN RELIC ---
+  const ret = new THREE.Mesh(new THREE.OctahedronGeometry(.9,0), mats.glow);
+  ret.position.set(-20,1.5,0);
+  root.add(ret);
+  clickObj(ret,'Return','Back to main',buildMain);
+
+  stats.textContent = `${room.title} · procedural layout`;
+  msg.textContent = 'Exact floorplan recreation. Alcoves ready for art injection.';
 }
-
-const __origInit = init;
-init = async function(){
-  await __origInit();
-  buildRoomShortcuts();
-};
 JS;
 
-$html = str_replace("init();\n</script>", $inject . "\ninit();\n</script>", $html);
+$html = str_replace("function loadRoom(id){", $floorplanJs . "\nfunction loadRoom(id){", $html);
+
+// extend loader
+$html = str_replace("else msg.textContent='No renderer for '+r.kind}", "else if(r.kind==='floorplan-gallery') buildFloorplan(r); else msg.textContent='No renderer for '+r.kind}", $html);
 
 echo $html;
