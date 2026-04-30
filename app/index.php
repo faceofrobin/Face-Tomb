@@ -15,6 +15,17 @@ JS;
 
 $html = str_replace($oldGlass, $newGlass, $html);
 
+// add fade.jpeg as a clipped circular image medallion inside the main dome
+$oldMainDome = <<<'JS'
+const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);
+JS;
+
+$newMainDome = <<<'JS'
+const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);const fadeTex=tex('./images/fade.jpeg');fadeTex.center.set(.5,.5);const fadeMedallion=new THREE.Mesh(new THREE.CircleGeometry(7.25,96),new THREE.MeshBasicMaterial({map:fadeTex,side:THREE.DoubleSide}));fadeMedallion.rotation.x=-Math.PI/2;fadeMedallion.position.set(0,10.82,0);root.add(fadeMedallion);const fadeRing=new THREE.Mesh(new THREE.TorusGeometry(7.32,.12,12,128),mats.gold);fadeRing.rotation.x=-Math.PI/2;fadeRing.position.set(0,10.815,0);root.add(fadeRing);
+JS;
+
+$html = str_replace($oldMainDome, $newMainDome, $html);
+
 // inject JS into module before init()
 $inject = <<<JS
 const roomQuick = document.getElementById('roomQuick');
