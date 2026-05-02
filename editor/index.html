@@ -19,177 +19,53 @@ small{color:#bda86f}
 </head>
 <body>
 <h1>Face Tomb Editor</h1>
-
-<h2>Movement</h2>
-<div id="movement" class="card"></div>
-<button class="secondary" onclick="resetMovement()">Reset Movement Defaults</button>
-
 <h2>Rooms</h2>
 <div id="rooms"></div>
-<button onclick="addRoom()">Add Room</button>
 <button onclick="save()">Save</button>
-
 <script>
-const DEFAULT_MOVEMENT={
- cameraFov:75,
- walkSpeed:4.8,
- runSpeed:8.5,
- mouseLookSensitivity:0.0022,
- joystickLookSpeed:2.65,
- joystickPitchSpeed:1.9,
- jumpHeight:5.2,
- gravity:13.5,
- joystickDeadzone:0.08,
- playerRadius:0.45,
- mainSpawnX:0,
- mainSpawnZ:18.6,
- mainSpawnYaw:180,
- hallwaySpawnYaw:0,
- glassSpawnYaw:180,
- barSpawnX:0,
- barSpawnZ:9.2,
- barSpawnYaw:0
-};
-const GLASS_DEFAULTS={
- sides:12,
- towerRadius:12,
- roomScale:2.35,
- panelWidth:3.2,
- panelHeight:8,
- layers:3,
- verticalGap:8.15,
- towerHeight:24.3,
- wallHeight:30,
- roofClearance:5.7,
- spinSpeed:0.04,
- baseAtEyeLevel:true,
- uniformRings:true,
- preserveAspectRatio:true
-};
 let rooms=[];
-let config={movement:{...DEFAULT_MOVEMENT}};
-
 async function load(){
- const [scene,cfg]=await Promise.all([
-  fetch('../api/scene.php?ts='+Date.now()).then(r=>r.json()),
-  fetch('../api/config.php?ts='+Date.now()).then(r=>r.json()).catch(()=>({movement:{}}))
- ]);
+ const scene=await fetch('../api/scene.php').then(r=>r.json());
  rooms=scene.rooms||[];
- rooms.forEach(r=>{ if(r.kind==='glass-tower') r.config={...GLASS_DEFAULTS,...(r.config||{})}; });
- config={movement:{...DEFAULT_MOVEMENT,...(cfg.movement||{})}};
  render();
 }
-
-function slider(label,key,min,max,step){
- const v=Number(config.movement[key]??DEFAULT_MOVEMENT[key]);
- const shown=step<0.01?v.toFixed(4):v.toFixed(step<0.1?2:1);
- return `
-  <label><span>${label}</span><strong>${shown}</strong></label>
-  <input type="range" min="${min}" max="${max}" step="${step}" value="${v}"
-   oninput="config.movement.${key}=parseFloat(this.value);render()">
- `;
+function slider(i,label,key,min,max,step){
+ const v=rooms[i].config?.[key]||0;
+ return `<label><span>${label}</span><strong>${v}</strong></label><input type=range min=${min} max=${max} step=${step} value=${v} oninput="rooms[${i}].config=rooms[${i}].config||{};rooms[${i}].config.${key}=parseFloat(this.value);render()">`;
 }
-function roomNumberSlider(i,label,key,min,max,step,defaults){
- const r=rooms[i];
- r.config={...(r.kind==='glass-tower'?GLASS_DEFAULTS:{}),...(r.config||{})};
- const fallback=defaults?.[key]??0;
- const v=Number(r.config[key]??fallback);
- const shown=step<0.01?v.toFixed(3):v.toFixed(step<0.1?2:1);
- return `
-  <label><span>${label}</span><strong>${shown}</strong></label>
-  <input type="range" min="${min}" max="${max}" step="${step}" value="${v}"
-   oninput="rooms[${i}].config=rooms[${i}].config||{};rooms[${i}].config.${key}=parseFloat(this.value);syncGlassTowerHeight(${i});render()">
- `;
-}
-function roomBool(i,label,key,defaults){
- const r=rooms[i];
- r.config={...(r.kind==='glass-tower'?GLASS_DEFAULTS:{}),...(r.config||{})};
- const checked=(r.config[key]??defaults?.[key])?"checked":"";
- return `<label><span>${label}</span><strong>${checked?'ON':'OFF'}</strong></label><input type="checkbox" ${checked} onchange="rooms[${i}].config.${key}=this.checked;render()">`;
-}
-function syncGlassTowerHeight(i){
- const c=rooms[i].config||{};
- if(rooms[i].kind==='glass-tower'){
-  const base=c.baseAtEyeLevel?1.65:0;
-  c.towerHeight=Number((base+((c.layers||3)-1)*(c.verticalGap||8.15)+(c.panelHeight||8)).toFixed(2));
-  if((c.wallHeight||0)<c.towerHeight+(c.roofClearance||4)) c.wallHeight=Number((c.towerHeight+(c.roofClearance||4)).toFixed(2));
- }
-}
-function glassControls(i){
- const r=rooms[i];
- r.config={...GLASS_DEFAULTS,...(r.config||{})};
- syncGlassTowerHeight(i);
- return `<div class="subcard"><h3>Glass Chapel Controls</h3>
- ${roomNumberSlider(i,'Wall / Roof Height','wallHeight',12,80,0.5,GLASS_DEFAULTS)}
- ${roomNumberSlider(i,'Roof Clearance','roofClearance',1,20,0.1,GLASS_DEFAULTS)}
- ${roomNumberSlider(i,'Tower Radius','towerRadius',4,24,0.1,GLASS_DEFAULTS)}
- ${roomNumberSlider(i,'Room Scale','roomScale',1.2,4,0.05,GLASS_DEFAULTS)}
- ${roomNumberSlider(i,'Panel Width','panelWidth',1,8,0.1,GLASS_DEFAULTS)}
- ${roomNumberSlider(i,'Panel Height','panelHeight',2,14,0.1,GLASS_DEFAULTS)}
- ${roomNumberSlider(i,'Layers / Rings','layers',1,8,1,GLASS_DEFAULTS)}
- ${roomNumberSlider(i,'Vertical Gap','verticalGap',2,14,0.1,GLASS_DEFAULTS)}
- ${roomNumberSlider(i,'Sides Around Tower','sides',4,24,1,GLASS_DEFAULTS)}
- ${roomNumberSlider(i,'Spin Speed','spinSpeed',0,0.2,0.005,GLASS_DEFAULTS)}
- ${roomBool(i,'Base At Eye Level','baseAtEyeLevel',GLASS_DEFAULTS)}
- <small>Computed tower height: ${r.config.towerHeight}. Save, then reload the viewer.</small>
- </div>`;
-}
-
 function render(){
- document.getElementById('movement').innerHTML=
-  slider('Camera FOV','cameraFov',60,110,1)+
-  slider('Walk Speed','walkSpeed',1,10,0.1)+
-  slider('Run Speed','runSpeed',2,15,0.1)+
-  slider('Mouse Look Sensitivity','mouseLookSensitivity',0.0005,0.006,0.0001)+
-  slider('Joystick Pan Speed','joystickLookSpeed',0.5,5,0.05)+
-  slider('Joystick Pitch Speed','joystickPitchSpeed',0.5,5,0.05)+
-  slider('Jump Height','jumpHeight',1,12,0.1)+
-  slider('Gravity','gravity',5,25,0.1)+
-  slider('Joystick Deadzone','joystickDeadzone',0,0.25,0.01)+
-  slider('Player Collision Radius','playerRadius',0.2,1.2,0.05)+
-  slider('Main Spawn X','mainSpawnX',-20,20,0.1)+
-  slider('Main Spawn Z','mainSpawnZ',-20,20,0.1)+
-  slider('Main Spawn Rotation','mainSpawnYaw',0,360,1)+
-  slider('Glass Spawn Rotation','glassSpawnYaw',0,360,1)+
-  slider('Hallway Spawn Rotation','hallwaySpawnYaw',0,360,1)+
-  slider('Bar Spawn X','barSpawnX',-10,10,0.1)+
-  slider('Bar Spawn Z','barSpawnZ',-10,10,0.1)+
-  slider('Bar Spawn Rotation','barSpawnYaw',0,360,1)+
-  '<small>Changes apply after saving and reloading the viewer.</small>';
-
  const el=document.getElementById('rooms');
  el.innerHTML='';
  rooms.forEach((r,i)=>{
-  if(r.kind==='glass-tower') r.config={...GLASS_DEFAULTS,...(r.config||{})};
+  let extra='';
+  if(r.kind==='art-history-room'){
+    extra=`<div class='subcard'><h3>Art History Controls</h3>
+    ${slider(i,'Artwork Width','artWidth',2,8,0.1)}
+    ${slider(i,'Artwork Height','artHeight',2,8,0.1)}
+    ${slider(i,'Artwork Height Position','artCenterHeight',2,8,0.1)}
+    ${slider(i,'Room Height','roomHeight',4,20,0.5)}
+    ${slider(i,'Bench Height','benchHeight',0.2,2,0.05)}
+    ${slider(i,'Spotlight Brightness','spotlightBrightness',0.2,5,0.1)}
+    ${slider(i,'Spotlight Distance','spotlightDistance',5,30,0.5)}
+    ${slider(i,'Spawn Rotation','yaw',0,360,1)}
+    </div>`;
+  }
   el.innerHTML+=`<div class='card'>
-  <input value='${r.id}' placeholder='Room ID' onchange='rooms[${i}].id=this.value'>
-  <input value='${r.title||""}' placeholder='Title' onchange='rooms[${i}].title=this.value'>
-  <input value='${r.category||""}' placeholder='Category (AIFACES folder)' onchange='rooms[${i}].category=this.value'>
-  <select onchange='rooms[${i}].kind=this.value;if(this.value==="glass-tower")rooms[${i}].config={...GLASS_DEFAULTS,...(rooms[${i}].config||{})};render()'>
-    <option ${r.kind==='bar-room'?'selected':''}>bar-room</option>
+  <input value='${r.id}' onchange='rooms[${i}].id=this.value'>
+  <input value='${r.title||""}' onchange='rooms[${i}].title=this.value'>
+  <select onchange='rooms[${i}].kind=this.value;render()'>
+    <option ${r.kind==='art-history-room'?'selected':''}>art-history-room</option>
     <option ${r.kind==='hallway-gallery'?'selected':''}>hallway-gallery</option>
-    <option ${r.kind==='glass-tower'?'selected':''}>glass-tower</option>
-    <option ${r.kind==='floorplan-gallery'?'selected':''}>floorplan-gallery</option>
+    <option ${r.kind==='bar-room'?'selected':''}>bar-room</option>
   </select>
-  <textarea placeholder='Description' onchange='rooms[${i}].description=this.value'>${r.description||""}</textarea>
-  ${r.kind==='glass-tower'?glassControls(i):''}
-  <button class='secondary' onclick='rooms.splice(${i},1);render()'>Delete</button>
+  ${extra}
   </div>`;
  });
 }
-
-function addRoom(){rooms.push({id:'new-room',title:'New Room',category:'HALLWAY',kind:'hallway-gallery'});render()}
-function resetMovement(){config.movement={...DEFAULT_MOVEMENT};render()}
-
 async function save(){
- rooms.forEach((r,i)=>{ if(r.kind==='glass-tower') syncGlassTowerHeight(i); });
- const res=await fetch('../api/rooms.php',{
-  method:'POST',
-  body:JSON.stringify({rooms,config})
- }).then(r=>r.json());
- alert(res.success?'Saved':'Save failed');
+ await fetch('../api/rooms.php',{method:'POST',body:JSON.stringify({rooms})});
+ alert('Saved');
 }
-
 load();
 </script>
 </body>
