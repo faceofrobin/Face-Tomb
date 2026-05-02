@@ -1,7 +1,6 @@
 <?php
 $html = file_get_contents(__DIR__ . '/index.html');
 
-// Restore fade.jpeg as a curved medallion in the main dome.
 $baseDome = <<<'JS'
 const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math.PI/2),mats.wall);dome.scale.y=.38;dome.position.y=10.9;root.add(dome);
 JS;
@@ -10,7 +9,6 @@ const dome=new THREE.Mesh(new THREE.SphereGeometry(22.8,48,20,0,Math.PI*2,0,Math
 JS;
 $html = str_replace($baseDome, $domeFace, $html);
 
-// Make only the Art History relic a bench, while preserving the existing relic shapes for all other rooms.
 $oldRelicGeo = <<<'JS'
 const geo=r.kind==='bar-room'?new THREE.CylinderGeometry(.34,.52,1.7,32):r.kind==='glass-tower'?new THREE.OctahedronGeometry(.85,0):new THREE.TorusKnotGeometry(.56,.14,72,10);const material=r.kind==='bar-room'?new THREE.MeshPhysicalMaterial({color:0xb06b24,transparent:true,opacity:.65,roughness:.2}):r.kind==='glass-tower'?mats.glass:mats.glow;const relic=new THREE.Mesh(geo,material);relic.position.y=2.15;g.add(relic);const lab=labelSprite(r.title||r.id);lab.position.set(0,3.35,0);g.add(lab);animated.push({object:relic,speed:.75});clickObj(relic,r.title||r.id,r.description||'Enter room',()=>loadRoom(r.id));colliders.push({x:g.position.x,z:g.position.z,w:2.1,d:2.1})
 JS;
@@ -54,31 +52,38 @@ JS;
 
 $artHistoryJs = <<<'JS'
 function buildArtHistory(room){
-  reset();state.room='art-history';scene.background=new THREE.Color(0x050403);scene.fog=new THREE.FogExp2(0x050403,.01);setSpawn(room.spawn?.x??0,room.spawn?.z??10,180);
-  const c=room.config||{},roomW=c.roomWidth||20,roomD=c.roomDepth||12,roomH=c.roomHeight||8,hallW=c.hallWidth||4,artW=c.artWidth||4,artH=c.artHeight||3;
-  const media=(sceneData.media?.[room.category]||[]).filter(i=>i.type==='image'&&!/^(wall|wallpaper|background|texture)\./i.test(i.filename||''));
-  const wallItem=(sceneData.media?.[room.category]||[]).find(i=>i.type==='image'&&/^(wall|wallpaper|background|texture)\./i.test(i.filename||''));
-  const wallMat=wallItem?itemMat(wallItem,4,2,mats.wall):mats.wall;
-  function museumBench(x,z,rot=0,parent=root){const g=new THREE.Group();box(0,.62,0,2.5,.22,.6,mats.stone,false,g);box(-1,.22,0,.22,.82,.6,mats.stone,false,g);box(1,.22,0,.22,.82,.6,mats.stone,false,g);g.position.set(x,0,z);g.rotation.y=rot;parent.add(g);return g}
+  reset();state.room='art-history';scene.background=new THREE.Color(0x050403);scene.fog=new THREE.FogExp2(0x050403,.008);
+  const c=room.config||{},roomW=c.roomWidth||20,roomD=c.roomDepth||12,roomH=c.roomHeight||8,hallW=c.hallWidth||4,artW=c.artWidth||4,artH=c.artHeight||3,benchH=c.benchHeight||.62,spotI=c.spotlightBrightness||1.45,spotD=c.spotlightDistance||12,artY=c.artCenterHeight||4.4;
+  setSpawn(room.spawn?.x??0,room.spawn?.z??0,Number(room.spawn?.yaw??90));
+  const all=(sceneData.media?.[room.category]||[]).filter(i=>i.type==='image');
+  const wallItem=all.find(i=>/^(wall|wallpaper|background|texture)(\.|-|_)/i.test(i.filename||''))||all.find(i=>/wall|wallpaper|background|texture/i.test(i.filename||''));
+  const media=all.filter(i=>i!==wallItem);
+  const wallMat=wallItem?itemMat(wallItem,c.wallRepeatX||4,c.wallRepeatY||2,mats.wall):mats.wall;
+  function titleCanvas(text){const cn=document.createElement('canvas');cn.width=1024;cn.height=192;const g=cn.getContext('2d');g.fillStyle='rgba(0,0,0,.82)';g.fillRect(0,0,1024,192);g.strokeStyle='#e7d29a';g.lineWidth=8;g.strokeRect(10,10,1004,172);g.fillStyle='#e7d29a';g.font='bold 54px Arial';g.textAlign='center';g.textBaseline='middle';g.fillText(String(text||'UNTITLED').replace(/[-_]+/g,' ').toUpperCase().slice(0,34),512,96);return new THREE.CanvasTexture(cn)}
+  function museumBench(x,z,rot,parent){const g=new THREE.Group();box(0,benchH,0,2.5,.22,.6,mats.stone,false,g);box(-1,benchH/2,0,.22,benchH,.6,mats.stone,false,g);box(1,benchH/2,0,.22,benchH,.6,mats.stone,false,g);g.position.set(x,0,z);g.rotation.y=rot;parent.add(g);return g}
+  function makeWallOpening(group,x,z,w,d){box(x,roomH/2,z,w,roomH,d,wallMat,true,group)}
   let index=0,chain=0;
   while(index<media.length||chain===0){
     const group=new THREE.Group();group.position.x=chain*(roomW+hallW);root.add(group);
-    box(0,-.05,0,roomW,.1,roomD,mats.floor,false,group);box(0,roomH/2,-roomD/2,roomW,roomH,.3,wallMat,true,group);box(0,roomH/2,roomD/2,roomW,roomH,.3,wallMat,true,group);box(-roomW/2,roomH/2,0,.3,roomH,roomD,wallMat,true,group);box(roomW/2,roomH/2,0,.3,roomH,roomD,wallMat,true,group);box(0,roomH,0,roomW,.15,roomD,mats.ceil,false,group);
+    box(0,-.05,0,roomW,.1,roomD,mats.floor,false,group);box(0,roomH,0,roomW,.15,roomD,mats.ceil,false,group);
+    box(0,roomH/2,-roomD/2,roomW,roomH,.3,wallMat,true,group);box(0,roomH/2,roomD/2,roomW,roomH,.3,wallMat,true,group);
+    box(-roomW/2,roomH/2,0,.3,roomH,roomD,wallMat,true,group);
+    if(index+6<media.length){box(roomW/2,roomH/2,-roomD*.375,.3,roomH,roomD*.25,wallMat,true,group);box(roomW/2,roomH/2,roomD*.375,.3,roomH,roomD*.25,wallMat,true,group)}else box(roomW/2,roomH/2,0,.3,roomH,roomD,wallMat,true,group);
     for(let i=0;i<6;i++){
-      if(!media[index])break;const item=media[index],front=i<3,x=(i%3-1)*6,z=front?-roomD/2+.18:roomD/2-.18;
-      const frame=new THREE.Group();frame.position.set(x,4.4,z);frame.rotation.y=front?0:Math.PI;group.add(frame);
+      if(!media[index])break;const item=media[index],front=i<3,x=(i%3-1)*(roomW/3.4),z=front?-roomD/2+.19:roomD/2-.19;
+      const frame=new THREE.Group();frame.position.set(x,artY,z);frame.rotation.y=front?0:Math.PI;group.add(frame);
       const back=new THREE.Mesh(new THREE.BoxGeometry(artW+.35,artH+.35,.18),new THREE.MeshStandardMaterial({color:0x000000,roughness:.7}));const art=new THREE.Mesh(new THREE.PlaneGeometry(artW,artH),new THREE.MeshBasicMaterial({map:tex(item.url),side:THREE.DoubleSide}));art.position.z=.1;frame.add(back,art);
-      const label=labelSprite(item.title);label.position.set(0,-2.2,.08);label.scale.set(3.8,.95,1);frame.add(label);
-      const spot=new THREE.SpotLight(0xffe8b8,1.45,11,.48,.55,1.4);spot.position.set(x,roomH-.55,z+(front?2.2:-2.2));spot.target=frame;group.add(spot);group.add(spot.target);
-      if(i%2===1)museumBench(x-3,front?-2.9:2.9,front?0:Math.PI,group);
+      const label=new THREE.Mesh(new THREE.PlaneGeometry(artW,Math.max(.45,artH*.18)),new THREE.MeshBasicMaterial({map:titleCanvas(item.title),transparent:true,side:THREE.DoubleSide}));label.position.set(0,-artH/2-.55,.11);frame.add(label);
+      const spot=new THREE.SpotLight(0xffe8b8,spotI,spotD,.5,.55,1.3);spot.position.set(x,roomH-.45,z+(front?2.4:-2.4));spot.target=frame;group.add(spot);group.add(spot.target);
+      if(i%2===1)museumBench(x-(roomW/6.8),front?-2.9:2.9,front?0:Math.PI,group);
       index++;
     }
-    if(index<media.length){box(roomW/2+hallW/2,roomH/2,0,hallW,roomH,roomD/2,wallMat,true,group);box(roomW/2+hallW/2,-.05,0,hallW,.1,roomD/2,mats.floor,false,group)}
+    if(index<media.length){const hx=roomW/2+hallW/2;box(hx,-.05,0,hallW,.1,roomD/2,mats.floor,false,group);box(hx,roomH,0,hallW,.15,roomD/2,mats.ceil,false,group);box(hx,roomH/2,-roomD/4,hallW,roomH,.3,wallMat,true,group);box(hx,roomH/2,roomD/4,hallW,roomH,.3,wallMat,true,group)}
     chain++;
   }
-  addLight(new THREE.HemisphereLight(0xe8d8b8,0x080604,.65));addLight(new THREE.PointLight(0xffd9a0,1.2,40,2)).position.set(0,5,0);
-  const ret=new THREE.Mesh(new THREE.OctahedronGeometry(.8,0),mats.glow);ret.position.set(0,1.5,roomD-3);root.add(ret);clickObj(ret,'Return','Back to the main chamber.',buildMain);animated.push({object:ret,speed:.8});
-  stats.textContent=`${room.title} · ${media.length} framed works`;msg.textContent='The Art History Room is open: six works per room, title plaques, benches, black frames, and spotlights.';
+  addLight(new THREE.HemisphereLight(0xe8d8b8,0x080604,.72));addLight(new THREE.PointLight(0xffd9a0,.9,60,2)).position.set(0,5,0);
+  const ret=new THREE.Mesh(new THREE.OctahedronGeometry(.8,0),mats.glow);ret.position.set(0,1.5,roomD/2-2);root.add(ret);clickObj(ret,'Return','Back to the main chamber.',buildMain);animated.push({object:ret,speed:.8});
+  stats.textContent=`${room.title} · ${media.length} framed works · ${wallItem?wallItem.filename:'default wall'}`;msg.textContent=media.length?`The Art History Room loaded ${media.length} works from /AIFACES/${room.category}.`:`No art found in /AIFACES/${room.category}. Add images there, and name the wallpaper wall.png or wallpaper.jpg.`;
 }
 JS;
 
