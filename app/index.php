@@ -44,46 +44,49 @@ async function buildFloorplan(room){
     const ret=new THREE.Mesh(new THREE.OctahedronGeometry(.75,0),mats.glow);ret.position.set(camera.position.x,1.3,camera.position.z+2.5);root.add(ret);clickObj(ret,'Return','Back to main',buildMain);animated.push({object:ret,speed:.8});
     addLight(new THREE.HemisphereLight(0xf4e5b5,0x101010,.9));addLight(new THREE.PointLight(0xffd77c,1.6,50,2)).position.set(0,5,0);
     stats.textContent=`${room.title} · SVG floorplan · ${artCount} art anchors`;msg.textContent='SVG floorplan loaded from /app/maps/floorplan.svg.';
-  }catch(e){
-    reset();state.room='floorplan';setSpawn(room.spawn?.x??-24,room.spawn?.z??0,90);box(0,0,0,20,.1,20,mats.floor,false);box(-10,3,0,.4,6,20,mats.wall);box(10,3,0,.4,6,20,mats.wall);box(0,3,-10,20,6,.4,mats.wall);box(0,3,10,20,6,.4,mats.wall);stats.textContent=`${room.title} · fallback`;msg.textContent='SVG missing or unreadable; fallback room loaded.';
-  }
+  }catch(e){reset();state.room='floorplan';setSpawn(room.spawn?.x??-24,room.spawn?.z??0,90);box(0,0,0,20,.1,20,mats.floor,false);box(-10,3,0,.4,6,20,mats.wall);box(10,3,0,.4,6,20,mats.wall);box(0,3,-10,20,6,.4,mats.wall);box(0,3,10,20,6,.4,mats.wall);stats.textContent=`${room.title} · fallback`;msg.textContent='SVG missing or unreadable; fallback room loaded.';}
 }
 JS;
 
 $artHistoryJs = <<<'JS'
 function buildArtHistory(room){
   reset();state.room='art-history';scene.background=new THREE.Color(0x050403);scene.fog=new THREE.FogExp2(0x050403,.008);
-  const c=room.config||{},roomW=c.roomWidth||20,roomD=c.roomDepth||12,roomH=c.roomHeight||8,hallW=c.hallWidth||4,artW=c.artWidth||4,artH=c.artHeight||3,benchH=c.benchHeight||.62,spotI=c.spotlightBrightness||1.45,spotD=c.spotlightDistance||12,artY=c.artCenterHeight||4.4;
+  const c=room.config||{},roomW=c.roomWidth||20,roomD=c.roomDepth||12,roomH=c.roomHeight||8,hallW=c.hallWidth||4,artW=c.artWidth||4,artH=c.artHeight||3,benchH=c.benchHeight||.62,spotI=c.spotlightBrightness||1.45,spotD=c.spotlightDistance||12,artY=c.artCenterHeight||4.4,lazyRadius=c.lazyRadius||34,maxLoaded=c.maxLoadedArt||12;
   setSpawn(room.spawn?.x??0,room.spawn?.z??0,Number(room.spawn?.yaw??90));
   const all=(sceneData.media?.[room.category]||[]).filter(i=>i.type==='image');
-  const wallItem=all.find(i=>/^(wall|wallpaper|background|texture)(\.|-|_)/i.test(i.filename||''))||all.find(i=>/wall|wallpaper|background|texture/i.test(i.filename||''));
+  const wallItem=all.find(i=>(i.filename||'').toLowerCase()==='wallpaper.png')||all.find(i=>/^wallpaper\./i.test(i.filename||''))||all.find(i=>/^(wall|background|texture)(\.|-|_)/i.test(i.filename||''));
   const media=all.filter(i=>i!==wallItem);
-  const wallMat=wallItem?itemMat(wallItem,c.wallRepeatX||4,c.wallRepeatY||2,mats.wall):mats.wall;
+  function wallpaperMaterial(){if(!wallItem)return mats.wall;const wt=tex(wallItem.url,c.wallRepeatX||4,c.wallRepeatY||2);wt.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:wt,side:THREE.DoubleSide})}
+  const wallMat=wallpaperMaterial();
   function titleCanvas(text){const cn=document.createElement('canvas');cn.width=1024;cn.height=192;const g=cn.getContext('2d');g.fillStyle='rgba(0,0,0,.82)';g.fillRect(0,0,1024,192);g.strokeStyle='#e7d29a';g.lineWidth=8;g.strokeRect(10,10,1004,172);g.fillStyle='#e7d29a';g.font='bold 54px Arial';g.textAlign='center';g.textBaseline='middle';g.fillText(String(text||'UNTITLED').replace(/[-_]+/g,' ').toUpperCase().slice(0,34),512,96);return new THREE.CanvasTexture(cn)}
   function museumBench(x,z,rot,parent){const g=new THREE.Group();box(0,benchH,0,2.5,.22,.6,mats.stone,false,g);box(-1,benchH/2,0,.22,benchH,.6,mats.stone,false,g);box(1,benchH/2,0,.22,benchH,.6,mats.stone,false,g);g.position.set(x,0,z);g.rotation.y=rot;parent.add(g);return g}
-  function makeWallOpening(group,x,z,w,d){box(x,roomH/2,z,w,roomH,d,wallMat,true,group)}
-  let index=0,chain=0;
+  const artNodes=[],activeArt=new Map();let index=0,chain=0;
   while(index<media.length||chain===0){
-    const group=new THREE.Group();group.position.x=chain*(roomW+hallW);root.add(group);
+    const gx=chain*(roomW+hallW),group=new THREE.Group();group.position.x=gx;root.add(group);
     box(0,-.05,0,roomW,.1,roomD,mats.floor,false,group);box(0,roomH,0,roomW,.15,roomD,mats.ceil,false,group);
-    box(0,roomH/2,-roomD/2,roomW,roomH,.3,wallMat,true,group);box(0,roomH/2,roomD/2,roomW,roomH,.3,wallMat,true,group);
-    box(-roomW/2,roomH/2,0,.3,roomH,roomD,wallMat,true,group);
+    box(0,roomH/2,-roomD/2,roomW,roomH,.3,wallMat,true,group);box(0,roomH/2,roomD/2,roomW,roomH,.3,wallMat,true,group);box(-roomW/2,roomH/2,0,.3,roomH,roomD,wallMat,true,group);
     if(index+6<media.length){box(roomW/2,roomH/2,-roomD*.375,.3,roomH,roomD*.25,wallMat,true,group);box(roomW/2,roomH/2,roomD*.375,.3,roomH,roomD*.25,wallMat,true,group)}else box(roomW/2,roomH/2,0,.3,roomH,roomD,wallMat,true,group);
     for(let i=0;i<6;i++){
       if(!media[index])break;const item=media[index],front=i<3,x=(i%3-1)*(roomW/3.4),z=front?-roomD/2+.19:roomD/2-.19;
-      const frame=new THREE.Group();frame.position.set(x,artY,z);frame.rotation.y=front?0:Math.PI;group.add(frame);
-      const back=new THREE.Mesh(new THREE.BoxGeometry(artW+.35,artH+.35,.18),new THREE.MeshStandardMaterial({color:0x000000,roughness:.7}));const art=new THREE.Mesh(new THREE.PlaneGeometry(artW,artH),new THREE.MeshBasicMaterial({map:tex(item.url),side:THREE.DoubleSide}));art.position.z=.1;frame.add(back,art);
-      const label=new THREE.Mesh(new THREE.PlaneGeometry(artW,Math.max(.45,artH*.18)),new THREE.MeshBasicMaterial({map:titleCanvas(item.title),transparent:true,side:THREE.DoubleSide}));label.position.set(0,-artH/2-.55,.11);frame.add(label);
-      const spot=new THREE.SpotLight(0xffe8b8,spotI,spotD,.5,.55,1.3);spot.position.set(x,roomH-.45,z+(front?2.4:-2.4));spot.target=frame;group.add(spot);group.add(spot.target);
+      artNodes.push({index,position:new THREE.Vector3(gx+x,artY,z),rotation:front?0:Math.PI,item,front});
+      const placeholder=new THREE.Mesh(new THREE.BoxGeometry(artW+.35,artH+.35,.08),new THREE.MeshBasicMaterial({color:0x050505}));placeholder.position.set(x,artY,z);placeholder.rotation.y=front?0:Math.PI;group.add(placeholder);
+      const spot=new THREE.SpotLight(0xffe8b8,spotI,spotD,.5,.55,1.3);spot.position.set(x,roomH-.45,z+(front?2.4:-2.4));spot.target=placeholder;group.add(spot);group.add(spot.target);
       if(i%2===1)museumBench(x-(roomW/6.8),front?-2.9:2.9,front?0:Math.PI,group);
       index++;
     }
     if(index<media.length){const hx=roomW/2+hallW/2;box(hx,-.05,0,hallW,.1,roomD/2,mats.floor,false,group);box(hx,roomH,0,hallW,.15,roomD/2,mats.ceil,false,group);box(hx,roomH/2,-roomD/4,hallW,roomH,.3,wallMat,true,group);box(hx,roomH/2,roomD/4,hallW,roomH,.3,wallMat,true,group)}
     chain++;
   }
+  function buildArtMesh(node){const frame=new THREE.Group();frame.position.copy(node.position);frame.rotation.y=node.rotation;const back=new THREE.Mesh(new THREE.BoxGeometry(artW+.35,artH+.35,.18),new THREE.MeshBasicMaterial({color:0x000000}));const art=new THREE.Mesh(new THREE.PlaneGeometry(artW,artH),new THREE.MeshBasicMaterial({map:tex(node.item.url),side:THREE.DoubleSide}));art.position.z=.1;frame.add(back,art);const label=new THREE.Mesh(new THREE.PlaneGeometry(artW,Math.max(.45,artH*.18)),new THREE.MeshBasicMaterial({map:titleCanvas(node.item.title),transparent:true,side:THREE.DoubleSide}));label.position.set(0,-artH/2-.55,.11);frame.add(label);root.add(frame);return frame}
+  function disposeArt(mesh){root.remove(mesh);mesh.traverse(o=>{o.geometry?.dispose?.();const matsA=Array.isArray(o.material)?o.material:[o.material];matsA.filter(Boolean).forEach(m=>{if(m.map)m.map.dispose?.();m.dispose?.()})})}
+  function updateArtLoading(){if(state.room!=='art-history')return;const nearby=artNodes.map(n=>({node:n,dist:n.position.distanceTo(camera.position)})).filter(n=>n.dist<=lazyRadius).sort((a,b)=>a.dist-b.dist).slice(0,maxLoaded);const needed=new Set(nearby.map(n=>n.node.index));nearby.forEach(({node})=>{if(!activeArt.has(node.index))activeArt.set(node.index,buildArtMesh(node))});for(const [id,mesh] of activeArt){if(!needed.has(id)){disposeArt(mesh);activeArt.delete(id)}}stats.textContent=`${room.title} · ${activeArt.size}/${media.length} works loaded · ${wallItem?wallItem.filename:'default wall'}`}
+  animated.push({object:{rotation:{y:0},userData:{tick:updateArtLoading}},speed:0});
+  const oldAnimated=animated[animated.length-1];oldAnimated.object.rotation.y=0;oldAnimated.speed=0;
   addLight(new THREE.HemisphereLight(0xe8d8b8,0x080604,.72));addLight(new THREE.PointLight(0xffd9a0,.9,60,2)).position.set(0,5,0);
   const ret=new THREE.Mesh(new THREE.OctahedronGeometry(.8,0),mats.glow);ret.position.set(0,1.5,roomD/2-2);root.add(ret);clickObj(ret,'Return','Back to the main chamber.',buildMain);animated.push({object:ret,speed:.8});
-  stats.textContent=`${room.title} · ${media.length} framed works · ${wallItem?wallItem.filename:'default wall'}`;msg.textContent=media.length?`The Art History Room loaded ${media.length} works from /AIFACES/${room.category}.`:`No art found in /AIFACES/${room.category}. Add images there, and name the wallpaper wall.png or wallpaper.jpg.`;
+  const lazyRunner={rotation:{y:0},userData:{}};animated.push({object:lazyRunner,speed:0,tick:updateArtLoading});
+  if(!window.__faceTombLazyPatched){window.__faceTombLazyPatched=true;const oldMove=move;move=function(dt){oldMove(dt);animated.forEach(a=>{if(typeof a.tick==='function')a.tick()})}}
+  updateArtLoading();msg.textContent=media.length?`The Art History Room loaded the nearest ${maxLoaded} works from /AIFACES/${room.category}.`:`No art found in /AIFACES/${room.category}. Add images there, and name the wallpaper wallpaper.png.`;
 }
 JS;
 
