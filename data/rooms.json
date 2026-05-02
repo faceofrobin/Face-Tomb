@@ -18,14 +18,20 @@
     "kind": "bar-room"
   },
   {
+    "id": "floorplan",
+    "title": "The Alcove Plan",
+    "category": "FLOORPLAN",
+    "kind": "floorplan-gallery",
+    "spawn": { "x": -26, "y": 1.65, "z": -2.5 },
+    "config": { "svgPixelsPerUnit": 12, "mapUrl": "./maps/floorplan.svg" }
+  },
+  {
     "id": "art-history",
     "title": "The Art History Room",
     "category": "ART_HISTORY",
     "kind": "art-history-room",
-    "description": "A chain of gallery rooms with framed works and benches.",
-    "spawn": { "x": 0, "y": 1.65, "z": 12 },
+    "spawn": { "x": 0, "y": 1.65, "z": 10 },
     "config": {
-      "roomsPerChain": 6,
       "roomWidth": 20,
       "roomDepth": 12,
       "hallWidth": 4
