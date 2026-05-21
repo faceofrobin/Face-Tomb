@@ -1,0 +1,4 @@
+Main chamber redesign deployment marker
+
+This file was added to trigger a fresh FTP deploy after the main chamber redesign.
+Expected app view: domed main chamber, rotating radial columns, glowing yellow spheres, central altar, no art-gallery hallway as the spawn room.

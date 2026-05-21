@@ -1,0 +1,22 @@
+{
+  "movement": {
+    "cameraFov": 75,
+    "walkSpeed": 4.8,
+    "runSpeed": 8.5,
+    "mouseLookSensitivity": 0.0022,
+    "joystickLookSpeed": 2.65,
+    "joystickPitchSpeed": 1.9,
+    "jumpHeight": 5.2,
+    "gravity": 13.5,
+    "joystickDeadzone": 0.08,
+    "playerRadius": 0.45,
+    "mainSpawnX": 0,
+    "mainSpawnZ": 18.6,
+    "mainSpawnYaw": 180,
+    "hallwaySpawnYaw": 0,
+    "glassSpawnYaw": 180,
+    "barSpawnX": 0,
+    "barSpawnZ": 9.2,
+    "barSpawnYaw": 0
+  }
+}
