@@ -15,6 +15,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Lint Tomb PHP
+        run: |
+          php -l app/index.php
+          php -l app/source-rooms.php
+          php -l api/scene.php
+          php -l api/rooms.php
+          php -l api/config.php
+
       - name: Deploy to faceofrobin.com/tomb
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
