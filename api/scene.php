@@ -3,7 +3,7 @@ header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
 function face_tomb_scan_media($category) {
-  $allowed = ['png','jpg','jpeg','webp','gif','mp3','wav','ogg','mp4','webm','mov'];
+  $allowed = ['png','jpg','jpeg','webp','gif','mp3','wav','ogg','mp4','webm','mov','md','txt','svg','glb','gltf','stl','json'];
   $fsPath = rtrim($_SERVER['DOCUMENT_ROOT'], '/') . "/AIFACES/{$category}";
   $publicBase = "https://faceofrobin.com/AIFACES/{$category}/";
   $items = [];
@@ -13,11 +13,19 @@ function face_tomb_scan_media($category) {
       if ($f === '.' || $f === '..') continue;
       $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
       if (!in_array($ext, $allowed, true)) continue;
+      if (in_array($ext, ['mp4','webm','mov'], true)) $type = 'video';
+      elseif (in_array($ext, ['mp3','wav','ogg'], true)) $type = 'audio';
+      elseif (in_array($ext, ['png','jpg','jpeg','webp','gif'], true)) $type = 'image';
+      elseif ($ext === 'svg') $type = 'vector';
+      elseif (in_array($ext, ['glb','gltf'], true)) $type = 'model';
+      elseif ($ext === 'stl') $type = 'mesh';
+      elseif (in_array($ext, ['md','txt'], true)) $type = 'text';
+      else $type = 'data';
       $items[] = [
         'filename' => $f,
         'title' => pathinfo($f, PATHINFO_FILENAME),
         'url' => $publicBase . rawurlencode($f),
-        'type' => in_array($ext, ['mp4','webm','mov'], true) ? 'video' : (in_array($ext, ['mp3','wav','ogg'], true) ? 'audio' : 'image'),
+        'type' => $type,
         'category' => $category,
         'extension' => $ext
       ];
