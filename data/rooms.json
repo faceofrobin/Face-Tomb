@@ -1,55 +1,16 @@
 [
-  {
-    "id": "hallway",
-    "title": "Le Couloir du Visage",
-    "category": "HALLWAY",
-    "kind": "hallway-gallery"
-  },
-  {
-    "id": "glass",
-    "title": "The Glass Chapel",
-    "category": "GLASS",
-    "kind": "glass-tower"
-  },
-  {
-    "id": "bar",
-    "title": "The Bar of the Face",
-    "category": "BAR",
-    "kind": "bar-room"
-  },
-  {
-    "id": "floorplan",
-    "title": "The Alcove Plan",
-    "category": "FLOORPLAN",
-    "kind": "floorplan-gallery",
-    "spawn": { "x": -26, "y": 1.65, "z": -2.5 },
-    "config": { "svgPixelsPerUnit": 12, "mapUrl": "./maps/floorplan.svg" }
-  },
-  {
-    "id": "art-history",
-    "title": "The Art History Room",
-    "category": "ART",
-    "kind": "art-history-room",
-    "spawn": { "x": 0, "y": 1.65, "z": 0, "yaw": 90 },
-    "config": {
-      "roomWidth": 20,
-      "roomDepth": 12,
-      "roomHeight": 8,
-      "hallWidth": 4,
-      "passageWidth": 3.4,
-      "artWidth": 4,
-      "artHeight": 3,
-      "artCenterHeight": 4.4,
-      "benchHeight": 0.62,
-      "spotlightBrightness": 1.45,
-      "spotlightDistance": 12,
-      "wallRepeatX": 4,
-      "wallRepeatY": 2,
-      "lazyRadius": 28,
-      "maxLoadedArt": 10,
-      "mobileLazyRadius": 20,
-      "mobileMaxLoadedArt": 6,
-      "mobileSpotlights": false
-    }
-  }
+ {"id":"hallway","title":"Le Couloir du Visage","category":"HALLWAY","kind":"hallway-gallery"},
+ {"id":"glass","title":"The Glass Chapel","category":"GLASS","kind":"glass-tower"},
+ {"id":"bar","title":"The Bar of the Face","category":"BAR","kind":"bar-room"},
+ {"id":"floorplan","title":"The Alcove Plan","category":"FLOORPLAN","kind":"floorplan-gallery","spawn":{"x":-26,"y":1.65,"z":-2.5},"config":{"svgPixelsPerUnit":12,"mapUrl":"./maps/floorplan.svg"}},
+ {"id":"art-history","title":"The Art History Room","category":"ART","kind":"art-history-room","spawn":{"x":0,"y":1.65,"z":0,"yaw":90},"config":{"roomWidth":20,"roomDepth":12,"roomHeight":8,"hallWidth":4,"passageWidth":3.4,"artWidth":4,"artHeight":3,"artCenterHeight":4.4,"benchHeight":0.62,"spotlightBrightness":1.45,"spotlightDistance":12,"wallRepeatX":4,"wallRepeatY":2,"lazyRadius":28,"maxLoadedArt":10,"mobileLazyRadius":20,"mobileMaxLoadedArt":6,"mobileSpotlights":false}},
+ {"id":"dome-source","title":"The Dome","category":"DOME","kind":"source-scene-room","sourceScene":"dome","relic":"hemisphere","spawn":{"x":0,"z":8,"yaw":180},"config":{"radius":10,"maxImages":40,"imageWidth":2.6,"imageHeight":2,"lightIntensity":2.4}},
+ {"id":"observatory-source","title":"The Observatory","category":"OBSERVATORY","kind":"source-scene-room","sourceScene":"observatory","relic":"star polyhedron","spawn":{"x":0,"z":8,"yaw":180},"config":{"radius":13,"starCount":220,"maxConstellations":24,"panelSize":2.4}},
+ {"id":"books-source","title":"The Books","category":"BOOKS","kind":"source-scene-room","sourceScene":"books","relic":"book","spawn":{"x":0,"z":8,"yaw":180},"config":{"maxBooks":48}},
+ {"id":"objects-source","title":"The Objects","category":"OBJECTS","kind":"source-scene-room","sourceScene":"objects","relic":"sculpture","spawn":{"x":0,"z":8,"yaw":180},"config":{"maxObjects":24,"radius":8,"objectWidth":2.1,"objectHeight":2.1,"lightIntensity":3}},
+ {"id":"clouds-source","title":"The Clouds","category":"CLOUDS","kind":"source-scene-room","sourceScene":"clouds","relic":"cloud","spawn":{"x":0,"z":8,"yaw":180},"config":{"maxClouds":18,"cloudWidth":4,"cloudHeight":2.5}},
+ {"id":"clock-source","title":"The Clock","category":"CLOCK","kind":"source-scene-room","sourceScene":"clock","relic":"clock ring","spawn":{"x":0,"z":8,"yaw":180},"config":{"radius":6,"handSpeed":-0.12}},
+ {"id":"train-source","title":"The Train","category":"TRAIN","kind":"source-scene-room","sourceScene":"train","relic":"rail wheel","spawn":{"x":-4,"z":8,"yaw":180},"config":{"cars":6,"trainSpeed":2.2}},
+ {"id":"airplane-source","title":"The Airplane","category":"AIRPLANE","kind":"source-scene-room","sourceScene":"airplane","relic":"wing","spawn":{"x":0,"z":8,"yaw":180},"config":{"mapWidth":18,"mapHeight":12}},
+ {"id":"locked-source","title":"Locked","category":"LOCKED","kind":"source-scene-room","sourceScene":"locked","relic":"lock mechanism","spawn":{"x":0,"z":8,"yaw":180},"config":{"rings":7,"spinSpeed":0.08}}
 ]
