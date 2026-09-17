@@ -3,7 +3,7 @@ name: Deploy Face Tomb to FTP
 on:
   push:
     branches:
-      - split-php-threejs-scaffold
+      - main
   workflow_dispatch:
 
 jobs:
