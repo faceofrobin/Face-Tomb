@@ -59,3 +59,18 @@ jobs:
             **/.git*/**
             **/node_modules/**
             README.md
+
+      - name: Smoke test live Tomb
+        run: |
+          sleep 4
+          curl --retry 6 --retry-delay 3 --retry-all-errors -fsSL "https://faceofrobin.com/tomb/app/?build=${GITHUB_SHA}" -o /tmp/live-tomb.html
+          grep -q "Version 4 · The Archive Breathes" /tmp/live-tomb.html
+          curl --retry 6 --retry-delay 3 --retry-all-errors -fsSL "https://faceofrobin.com/tomb/api/scene.php?build=${GITHUB_SHA}" -o /tmp/live-scene.json
+          python3 - <<'PY'
+          import json
+          data = json.load(open('/tmp/live-scene.json'))
+          rooms = data.get('rooms', [])
+          if len(rooms) < 10:
+              raise SystemExit(f'Live scene API returned only {len(rooms)} rooms')
+          print(f'Live Tomb responded with Version 4 and {len(rooms)} rooms.')
+          PY
