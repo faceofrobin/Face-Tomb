@@ -29,6 +29,23 @@ jobs:
           php -l api/rooms.php
           php -l api/config.php
 
+      - name: Validate generated Three.js module
+        run: |
+          php app/runtime.php > /tmp/tomb.html
+          python3 - <<'PY'
+          from pathlib import Path
+          html = Path('/tmp/tomb.html').read_text()
+          marker = '<script type="module">'
+          start = html.find(marker)
+          end = html.find('</script>', start)
+          if start < 0 or end < 0:
+              raise SystemExit('Three.js module script not found in generated runtime')
+          js = html[start + len(marker):end]
+          Path('/tmp/tomb.mjs').write_text(js)
+          print(f'Generated JS bytes: {len(js)}')
+          PY
+          node --check /tmp/tomb.mjs
+
       - name: Deploy to faceofrobin.com/tomb
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
