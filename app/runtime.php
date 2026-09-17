@@ -3,6 +3,13 @@ ob_start();
 require __DIR__ . '/source-rooms.php';
 $html = ob_get_clean();
 
+// Version 4: The Archive Breathes.
+$html = str_replace(
+  '<div id="hud"><h1>The Face Tomb</h1>',
+  '<div id="hud"><h1>The Face Tomb</h1><div style="margin:2px 0 7px;color:#e7d29a;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase">Version 4 · The Archive Breathes</div>',
+  $html
+);
+
 // Three examples modules use bare `three` imports unless unpkg rewrites them in module mode.
 $html = str_replace(
   'https://unpkg.com/three@0.161.0/examples/jsm/loaders/GLTFLoader.js',
@@ -12,6 +19,13 @@ $html = str_replace(
 $html = str_replace(
   'https://unpkg.com/three@0.161.0/examples/jsm/loaders/SVGLoader.js',
   'https://unpkg.com/three@0.161.0/examples/jsm/loaders/SVGLoader.js?module',
+  $html
+);
+
+// Repair the generated Observatory callback chain. The source adapter was missing one closing parenthesis.
+$html = str_replace(
+  'depthWrite:false}))));const d=fibonacciDir',
+  'depthWrite:false})))));const d=fibonacciDir',
   $html
 );
 
