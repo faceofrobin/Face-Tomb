@@ -24,6 +24,7 @@ jobs:
         run: |
           php -l app/index.php
           php -l app/source-rooms.php
+          php -l app/runtime.php
           php -l api/scene.php
           php -l api/rooms.php
           php -l api/config.php
