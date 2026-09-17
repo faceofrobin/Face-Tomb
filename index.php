@@ -222,7 +222,7 @@ $punchJson = json_encode($punchData['items'], JSON_UNESCAPED_SLASHES | JSON_HEX_
     <section class="hero">
       <div>
         <h1>The Face Tomb</h1>
-        <div class="version">Version 1.0.1</div>
+        <div class="version">Version 3</div>
         <p class="subtitle">A threshold directory for the tomb project: enter the working Three.js chamber, inspect the surrounding files, and maintain the living punch list for future rooms, doors, rituals, and mistakes we vow not to repeat.</p>
         <div class="nav">
           <a class="button" href="app/">Enter App</a>
