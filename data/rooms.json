@@ -36,6 +36,7 @@
       "roomDepth": 12,
       "roomHeight": 8,
       "hallWidth": 4,
+      "passageWidth": 3.4,
       "artWidth": 4,
       "artHeight": 3,
       "artCenterHeight": 4.4,
@@ -43,7 +44,12 @@
       "spotlightBrightness": 1.45,
       "spotlightDistance": 12,
       "wallRepeatX": 4,
-      "wallRepeatY": 2
+      "wallRepeatY": 2,
+      "lazyRadius": 28,
+      "maxLoadedArt": 10,
+      "mobileLazyRadius": 20,
+      "mobileMaxLoadedArt": 6,
+      "mobileSpotlights": false
     }
   }
 ]
